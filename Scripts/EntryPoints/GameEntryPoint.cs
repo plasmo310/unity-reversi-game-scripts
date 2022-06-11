@@ -2,7 +2,7 @@ using Reversi.Managers;
 using VContainer;
 using VContainer.Unity;
 
-namespace Reversi
+namespace Reversi.EntryPoints
 {
     /// <summary>
     /// Gameシーン EntryPoint

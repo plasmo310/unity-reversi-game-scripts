@@ -4,7 +4,7 @@ using UniRx;
 using UnityEngine;
 using VContainer;
 
-namespace Reversi.Presenter
+namespace Reversi.UIs
 {
     /// <summary>
     /// GamePresenter

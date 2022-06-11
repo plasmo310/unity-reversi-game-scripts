@@ -1,12 +1,13 @@
+using Reversi.EntryPoints;
 using Reversi.Managers;
 using Reversi.Players.Input;
 using Reversi.Players.Input.Impl;
-using Reversi.Presenter;
+using Reversi.UIs;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
 
-namespace Reversi
+namespace Reversi.LifeTimeScopes
 {
     /// <summary>
     /// Gameシーン LifeTimeScope

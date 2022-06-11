@@ -3,7 +3,7 @@ using Reversi.Services.Impl;
 using VContainer;
 using VContainer.Unity;
 
-namespace Reversi
+namespace Reversi.LifeTimeScopes
 {
     /// <summary>
     /// 全シーン共通 LifeTimeScope

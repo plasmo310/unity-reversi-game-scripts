@@ -41,16 +41,16 @@ namespace Reversi.Managers
         /// <summary>
         /// ゲーム初期化
         /// </summary>
-        /// <param name="player1Kind">プレイヤー1</param>
-        /// <param name="player2Kind">プレイヤー2</param>
+        /// <param name="player1Type">プレイヤー1</param>
+        /// <param name="player2Type">プレイヤー2</param>
         /// <param name="changeNextTurnAction">ターン切り替え処理</param>
-        public void InitializeGame(PlayerKind player1Kind, PlayerKind player2Kind, Action changeNextTurnAction)
+        public void InitializeGame(PlayerType player1Type, PlayerType player2Type, Action changeNextTurnAction)
         {
             _changeNextTurnAction = changeNextTurnAction;
 
             // ゲーム情報の設定
-            _player1 = CreatePlayer(player1Kind, StoneState.White);
-            _player2 = CreatePlayer(player2Kind, StoneState.Black);
+            _player1 = CreatePlayer(player1Type, StoneState.White);
+            _player2 = CreatePlayer(player2Type, StoneState.Black);
             _activePlayer = _player1;
         }
 
@@ -115,15 +115,15 @@ namespace Reversi.Managers
         /// <summary>
         /// プレイヤー作成処理
         /// </summary>
-        private IPlayer CreatePlayer(PlayerKind playerKind, StoneState stoneState)
+        private IPlayer CreatePlayer(PlayerType playerType, StoneState stoneState)
         {
-            switch (playerKind)
+            switch (playerType)
             {
-                case PlayerKind.InputPlayer:
+                case PlayerType.InputPlayer:
                     return new InputPlayer(stoneState, PutStone, _inputEventProvider);
-                case PlayerKind.RandomAIPlayer:
+                case PlayerType.RandomAIPlayer:
                     return new RandomAIPlayer(stoneState, PutStone);
-                case PlayerKind.MiniMaxAIPlayer:
+                case PlayerType.MiniMaxAIPlayer:
                     return new MiniMaxAIPlayer(stoneState, PutStone);
             }
             return null;

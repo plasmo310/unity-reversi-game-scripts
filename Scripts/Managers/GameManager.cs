@@ -20,8 +20,8 @@ namespace Reversi.Managers
         /// <summary>
         /// 選択プレイヤー
         /// </summary>
-        private PlayerKind _selectPlayer1;
-        private PlayerKind _selectPlayer2;
+        private PlayerType _selectPlayer1Type;
+        private PlayerType _selectPlayer2Type;
 
         /// <summary>
         /// ゲーム状態
@@ -76,8 +76,8 @@ namespace Reversi.Managers
 
                 // TODO 自由に切り替えられるようにする
                 // プレイヤーの選択
-                Owner._selectPlayer1 = PlayerKind.InputPlayer;
-                Owner._selectPlayer2 = PlayerKind.MiniMaxAIPlayer;
+                Owner._selectPlayer1Type = PlayerType.InputPlayer;
+                Owner._selectPlayer2Type = PlayerType.MiniMaxAIPlayer;
 
                 // ゲーム開始
                 StateMachine.ChangeState((int) GameState.Play);
@@ -98,7 +98,7 @@ namespace Reversi.Managers
                 Owner._stoneManager.InitializeStones(BoardManager.CellSideCount, Owner._boardManager.GetCellPosition);
 
                 // ゲーム初期化してターン開始
-                Owner._playerManager.InitializeGame(Owner._selectPlayer1, Owner._selectPlayer2, ChangeNextTurn);
+                Owner._playerManager.InitializeGame(Owner._selectPlayer1Type, Owner._selectPlayer2Type, ChangeNextTurn);
                 Owner._playerManager.StartTurn();
             }
 
