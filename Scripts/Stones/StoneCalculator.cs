@@ -34,6 +34,47 @@ namespace Reversi.Stones
         }
 
         /// <summary>
+        /// 勝った方のストーン状態を返却する
+        /// </summary>
+        /// <param name="checkStoneStates"></param>
+        /// <returns></returns>
+        public static StoneState GetWinStoneState(StoneState[,] checkStoneStates)
+        {
+            var winStoneState = StoneState.Empty;
+            CheckStoneColorCount(checkStoneStates, (whiteCount, blackCount) =>
+            {
+                if (whiteCount > blackCount)
+                {
+                    winStoneState = StoneState.White;
+                }
+                else if (blackCount > whiteCount)
+                {
+                    winStoneState = StoneState.Black;
+                }
+                else
+                {
+                    winStoneState = StoneState.Empty; // 引き分けの場合はEmptyで返す
+                }
+            });
+            return winStoneState;
+        }
+
+        /// <summary>
+        /// ゲームの進捗状態(0.0〜1.0)を返す
+        /// </summary>
+        /// <param name="stoneStates"></param>
+        /// <returns></returns>
+        public static float GetGameRate(StoneState[,] stoneStates)
+        {
+            var putCount = 0;
+            foreach (var stoneState in stoneStates)
+            {
+                if (stoneState != StoneState.Empty) putCount++;
+            }
+            return (float) putCount / stoneStates.Length;
+        }
+
+        /// <summary>
         /// 置いた後のストーン状態を返却する
         /// </summary>
         /// <param name="stoneStates"></param>

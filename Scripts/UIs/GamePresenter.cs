@@ -12,6 +12,7 @@ namespace Reversi.UIs
     public class GamePresenter : MonoBehaviour
     {
         [Inject] private StoneManager _stoneManager;
+        [Inject] private PlayerManager _playerManager;
         [Inject] private GameManager _gameManager;
         [SerializeField] private TextMeshProUGUI blackCountText;
         [SerializeField] private TextMeshProUGUI whiteCountText;
@@ -41,19 +42,18 @@ namespace Reversi.UIs
                     switch (x)
                     {
                         case GameState.Result:
-                            var whiteCount = _stoneManager.WhiteStoneCount.Value;
-                            var blackCount = _stoneManager.BlackStoneCount.Value;
-                            if (whiteCount > blackCount)
+                            var playerResultState = _playerManager.GetPlayer1ResultState();
+                            switch (playerResultState)
                             {
-                                resultText.text = "WIN!!";
-                            }
-                            else if (whiteCount < blackCount)
-                            {
-                                resultText.text = "LOSE!!";;
-                            }
-                            else
-                            {
-                                resultText.text = "DRAW...";
+                                case PlayerResultState.Win:
+                                    resultText.text = "WIN!!";
+                                    break;
+                                case PlayerResultState.Lose:
+                                    resultText.text = "LOSE!!";;
+                                    break;
+                                default:
+                                    resultText.text = "DRAW...";
+                                    break;
                             }
                             break;
                         default:

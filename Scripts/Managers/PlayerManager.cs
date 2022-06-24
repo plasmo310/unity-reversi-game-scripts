@@ -94,6 +94,22 @@ namespace Reversi.Managers
         }
 
         /// <summary>
+        /// プレイヤー1の結果状態を返却する
+        /// </summary>
+        public PlayerResultState GetPlayer1ResultState()
+        {
+            return _stoneManager.GetPlayerResultState(_player1.MyStoneState);
+        }
+
+        /// <summary>
+        /// プレイヤー2の結果状態を返却する
+        /// </summary>
+        public PlayerResultState GetPlayer2ResultState()
+        {
+            return _stoneManager.GetPlayerResultState(_player2.MyStoneState);
+        }
+
+        /// <summary>
         /// ストーンを置く
         /// </summary>
         /// <param name="stoneState"></param>
@@ -125,6 +141,10 @@ namespace Reversi.Managers
                     return new RandomAIPlayer(stoneState, PutStone);
                 case PlayerType.MiniMaxAIPlayer:
                     return new MiniMaxAIPlayer(stoneState, PutStone);
+                case PlayerType.MonteCarloAIPlayer:
+                    return new MonteCarloAIPlayer(stoneState, PutStone);
+                case PlayerType.MiniMaxMonteAIPlayer:
+                    return new MiniMaxMontePlayer(stoneState, PutStone);
             }
             return null;
         }

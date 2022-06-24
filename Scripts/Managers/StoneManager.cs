@@ -159,6 +159,20 @@ namespace Reversi.Managers
         }
 
         /// <summary>
+        /// プレイヤーのストーン状態に対する勝利判定を返却する
+        /// </summary>
+        /// <param name="playerStoneState">プレイヤーのストーン状態</param>
+        public PlayerResultState GetPlayerResultState(StoneState playerStoneState)
+        {
+            var winStoneState = StoneCalculator.GetWinStoneState(_stoneStates);
+            if (winStoneState == StoneState.Empty)
+            {
+                return PlayerResultState.Draw;
+            }
+            return winStoneState == playerStoneState ? PlayerResultState.Win : PlayerResultState.Lose;
+        }
+
+        /// <summary>
         /// フォーカスしているストーン
         /// </summary>
         private List<StoneBehaviour> _focusStones;

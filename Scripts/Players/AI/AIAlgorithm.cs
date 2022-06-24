@@ -10,6 +10,79 @@ namespace Reversi.Players.AI
     public static class AIAlgorithm
     {
         /// <summary>
+        /// モンテカルロ法によるストーンの探索
+        /// </summary>
+        /// <param name="stoneStates">ストーン状態配列</param>
+        /// <param name="putStoneState">置くストーン状態</param>
+        /// <param name="playCount">プレイする回数</param>
+        /// <returns>探索したストーン</returns>
+        public static StoneIndex SearchMonteCarloStone(StoneState[,] stoneStates, StoneState putStoneState, int playCount)
+        {
+            // 探索したストーン
+            StoneIndex resultStoneIndex = null;
+
+            // 置くことが可能なストーン
+            var maxWinCount = -1; // 勝った数
+            var canPutStoneIndex = StoneCalculator.GetAllCanPutStonesIndex(stoneStates, putStoneState);
+            foreach (var putStoneIndex in canPutStoneIndex)
+            {
+                // 置いた場合に勝った数を求める
+                var winCount = GetPlayGameWinCount(stoneStates, putStoneState, putStoneIndex, playCount);
+                if (maxWinCount < winCount)
+                {
+                    maxWinCount = winCount;
+                    resultStoneIndex = putStoneIndex;
+                }
+            }
+            return resultStoneIndex;
+        }
+
+        /// <summary>
+        /// 指定回数ゲームを行い、勝利した回数を返却する
+        /// </summary>
+        /// <param name="stoneStates">ストーン状態配列</param>
+        /// <param name="checkStoneState">置くストーン状態</param>
+        /// <param name="checkStoneIndex">置く位置</param>
+        /// <param name="playCount">ゲームをプレイする回数</param>
+        /// <returns>勝利した回数</returns>
+        private static int GetPlayGameWinCount(StoneState[,] stoneStates, StoneState checkStoneState, StoneIndex checkStoneIndex, int playCount)
+        {
+            // 別スレッドでも動作するようSystemの乱数を使用
+            var random = new Random();
+
+            // 勝利した回数をカウントする
+            var winCount = 0;
+            for (var i = 0; i < playCount; i++)
+            {
+                // 勝敗が決まるまでゲームを行う
+                var activeStoneState = checkStoneState;
+                var activeStoneStates = StoneCalculator.GetPutStoneState(stoneStates, activeStoneState, checkStoneIndex.X, checkStoneIndex.Z);
+                while (true)
+                {
+                    // 手番を交代して置くことが可能なストーン状態を取得
+                    activeStoneState = GetReverseStoneState(activeStoneState);
+                    var canPutStonesIndex = StoneCalculator.GetAllCanPutStonesIndex(activeStoneStates, activeStoneState);
+                    if (canPutStonesIndex == null || canPutStonesIndex.Count == 0)
+                    {
+                        // 置けなくなったらゲーム終了
+                        break;
+                    }
+                    // ランダムで置く
+                    var randomIndex = random.Next(0, canPutStonesIndex.Count);
+                    var selectStoneIndex = canPutStonesIndex[randomIndex];
+                    activeStoneStates = StoneCalculator.GetPutStoneState(activeStoneStates, activeStoneState, selectStoneIndex.X, selectStoneIndex.Z);
+                }
+
+                // 勝利判定を行う
+                if (StoneCalculator.GetWinStoneState(activeStoneStates) == checkStoneState)
+                {
+                    winCount++;
+                }
+            }
+            return winCount;
+        }
+
+        /// <summary>
         /// NegaMaxアルゴリズムによるストーンの探索
         /// </summary>
         /// <param name="stoneStates">ストーン状態配列</param>
@@ -19,6 +92,9 @@ namespace Reversi.Players.AI
         /// <returns>探索したストーン</returns>
         public static StoneIndex SearchNegaMaxStone(StoneState[,] stoneStates, StoneState putStoneState, int depth, bool isRandom = false)
         {
+            // 別スレッドでも動作するようSystemの乱数を使用
+            var random = new Random();
+
             // 探索したストーン
             StoneIndex resultStoneIndex = null;
 
@@ -37,7 +113,7 @@ namespace Reversi.Players.AI
                     maxScore = score;
                     resultStoneIndex = putStoneIndex;
                 }
-                else if (isRandom && maxScore == score && UnityEngine.Random.Range(0, 2) == 0)
+                else if (isRandom && maxScore == score && random.Next(0, 2) == 0)
                 {
                     // スコアが同じだったら1/2の確率で入れ替える
                     maxScore = score;
@@ -91,6 +167,9 @@ namespace Reversi.Players.AI
         /// <returns>探索したストーン</returns>
         public static StoneIndex SearchNegaAlphaStone(StoneState[,] stoneStates, StoneState putStoneState, int depth, bool isRandom = false)
         {
+            // 別スレッドでも動作するようSystemの乱数を使用
+            var random = new Random();
+
             // 探索したストーン
             StoneIndex resultStoneIndex = null;
 
@@ -110,7 +189,7 @@ namespace Reversi.Players.AI
                     alpha = score;
                     resultStoneIndex = putStoneIndex;
                 }
-                else if (isRandom && alpha == score && UnityEngine.Random.Range(0, 2) == 0)
+                else if (isRandom && alpha == score && random.Next(0, 2) == 0)
                 {
                     // スコアが同じだったら1/2の確率で入れ替える
                     alpha = score;
