@@ -1,6 +1,7 @@
 # unity-reversi-game-scripts
 Unityで作ったリバーシのスクリプト</br>
 ### 改訂履歴
+- v0.2.0</br>モンテカルロ法で置くAIを実装
 - v0.1.0</br>ゲーム基盤、ランダムに置くAI、MiniMaxアルゴリズムで置くAIを実装
 ### Unityバージョン<br>
 - 2021.3.1f1<br>
