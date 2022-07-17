@@ -23,7 +23,10 @@ namespace Reversi.Players.AI
         private async void StartThinkAsync()
         {
             // 考える時間
-            await UniTask.Delay(500);
+            await WaitSelectTime(200);
+
+            // 早すぎると上手くいかないので1フレームは待つ
+            await UniTask.DelayFrame(1);
 
             // ランダムに取得して設定
             var canPutStones = StoneCalculator.GetAllCanPutStonesIndex(StoneStates, MyStoneState);

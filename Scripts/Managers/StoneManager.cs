@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using Reversi.Board;
 using Reversi.Services;
+using Reversi.Settings;
 using Reversi.Stones;
 using Reversi.Stones.Stone;
 using UniRx;
@@ -14,6 +16,8 @@ namespace Reversi.Managers
     /// </summary>
     public class StoneManager
     {
+        private readonly GameSettings _gameSettings;
+
         /// <summary>
         /// 各色ごとのストーンの数
         /// </summary>
@@ -36,7 +40,7 @@ namespace Reversi.Managers
         /// ストーン配列
         /// </summary>
         private StoneState[,] _stoneStates;
-        private StoneBehaviour[,] _viewStoneCores; // 表示用
+        private StoneBehaviour[,] _viewStoneBehaviours; // 表示用
 
         /// <summary>
         /// Y方向オフセット
@@ -44,13 +48,14 @@ namespace Reversi.Managers
         private static readonly float StoneOffsetY = 0.1f;
 
         [Inject]
-        public StoneManager(IAssetsService assetsService)
+        public StoneManager(IAssetsService assetsService, GameSettings gameSettings, BoardBehaviour boardBehaviour)
         {
+            _gameSettings = gameSettings;
+
             // 土台となるオブジェクトを生成
-            var board = GameObject.FindGameObjectWithTag("Board");
             _stonesBase = new GameObject("Stones");
-            _stonesBase.transform.SetParent(board.transform);
-            _stonesBase.transform.position = board.transform.position;
+            _stonesBase.transform.SetParent(boardBehaviour.transform);
+            _stonesBase.transform.position = boardBehaviour.transform.position;
 
             // Prefab読み込み
             _stonePrefab = assetsService.LoadAssets("Stone");
@@ -69,16 +74,17 @@ namespace Reversi.Managers
             }
 
             // ストーンをEmptyで初期化して設定
-            _viewStoneCores = new StoneBehaviour[cellSideCount, cellSideCount];
+            _viewStoneBehaviours = new StoneBehaviour[cellSideCount, cellSideCount];
             _stoneStates = new StoneState[cellSideCount, cellSideCount];
-            for (var x = 0; x < _viewStoneCores.GetLength(0); x++)
+            for (var x = 0; x < _viewStoneBehaviours.GetLength(0); x++)
             {
-                for (var z = 0; z < _viewStoneCores.GetLength(1); z++)
+                for (var z = 0; z < _viewStoneBehaviours.GetLength(1); z++)
                 {
                     var stone = UnityEngine.Object.Instantiate(_stonePrefab, _stonesBase.transform, true);
                     stone.transform.localPosition = getCellPosition(x, z) + Vector3.up * StoneOffsetY;
-                    _viewStoneCores[x, z] = stone.GetComponent<StoneBehaviour>();
-                    _viewStoneCores[x, z].SetIndex(x, z);
+                    _viewStoneBehaviours[x, z] = stone.GetComponent<StoneBehaviour>();
+                    _viewStoneBehaviours[x, z].SetIndex(x, z);
+                    _viewStoneBehaviours[x, z].IsDisplayAnimation = _gameSettings.debugOption.isDisplayAnimation;
                     _stoneStates[x, z] = StoneState.Empty;
                 }
             }
@@ -142,11 +148,11 @@ namespace Reversi.Managers
         private void UpdateAllViewStones(StoneState[,] stoneStates, StoneIndex putStoneIndex = null)
         {
             // ストーンオブジェクトの表示を更新
-            for (var x = 0; x < _viewStoneCores.GetLength(0); x++)
+            for (var x = 0; x < _viewStoneBehaviours.GetLength(0); x++)
             {
-                for (var z = 0; z < _viewStoneCores.GetLength(1); z++)
+                for (var z = 0; z < _viewStoneBehaviours.GetLength(1); z++)
                 {
-                    _viewStoneCores[x, z].ChangeViewState(stoneStates[x, z], putStoneIndex);
+                    _viewStoneBehaviours[x, z].ChangeViewState(stoneStates[x, z], putStoneIndex);
                 }
             }
 
@@ -196,14 +202,14 @@ namespace Reversi.Managers
         public void SetFocusAllCanPutStones(StoneState putState)
         {
             var canPutStones = new List<StoneBehaviour>();
-            for (var x = 0; x < _viewStoneCores.GetLength(0); x++)
+            for (var x = 0; x < _viewStoneBehaviours.GetLength(0); x++)
             {
-                for (var z = 0; z < _viewStoneCores.GetLength(1); z++)
+                for (var z = 0; z < _viewStoneBehaviours.GetLength(1); z++)
                 {
                     // 置けるストーンなら追加
                     if (StoneCalculator.GetTurnStonesIndex(_stoneStates, putState, x, z).Count > 0)
                     {
-                        canPutStones.Add(_viewStoneCores[x, z]);
+                        canPutStones.Add(_viewStoneBehaviours[x, z]);
                     }
                 }
             }

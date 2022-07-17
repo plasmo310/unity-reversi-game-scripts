@@ -1,6 +1,7 @@
 # unity-reversi-game-scripts
 Unityで作ったリバーシのスクリプト</br>
 ### 改訂履歴
+- v0.3.0</br>ML-Agentsを用いたAIを実装
 - v0.2.0</br>モンテカルロ法で置くAIを実装
 - v0.1.0</br>ゲーム基盤、ランダムに置くAI、MiniMaxアルゴリズムで置くAIを実装
 ### Unityバージョン<br>
@@ -9,6 +10,7 @@ Unityで作ったリバーシのスクリプト</br>
 - VContainer<br>https://github.com/hadashiA/VContainer
 - UniRx<br>https://github.com/neuecc/UniRx
 - UniTask<br>https://github.com/Cysharp/UniTask
+- ML-Agents<br>https://github.com/Unity-Technologies/ml-agents
 - DOTWeen<br>https://assetstore.unity.com/packages/tools/animation/dotween-hotween-v2-27676
 - Japanese School Classroom<br>https://assetstore.unity.com/packages/3d/environments/japanese-school-classroom-18392
 ### 全体構成

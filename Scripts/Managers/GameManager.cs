@@ -2,6 +2,8 @@ using System;
 using Cysharp.Threading.Tasks;
 using Reversi.Common;
 using Reversi.Players;
+using Reversi.Services;
+using Reversi.Settings;
 using UniRx;
 using UnityEngine;
 using VContainer;
@@ -16,6 +18,8 @@ namespace Reversi.Managers
         private readonly BoardManager _boardManager;
         private readonly StoneManager _stoneManager;
         private readonly PlayerManager _playerManager;
+        private readonly GameSettings _gameSettings;
+        private readonly ILogService _logService;
 
         /// <summary>
         /// 選択プレイヤー
@@ -31,11 +35,13 @@ namespace Reversi.Managers
         private readonly StateMachine<GameManager> _stateMachine;
 
         [Inject]
-        public GameManager(BoardManager boardManager, StoneManager stoneManager, PlayerManager playerManager)
+        public GameManager(BoardManager boardManager, StoneManager stoneManager, PlayerManager playerManager, GameSettings gameSettings, ILogService logService)
         {
             _boardManager = boardManager;
             _stoneManager = stoneManager;
             _playerManager = playerManager;
+            _gameSettings = gameSettings;
+            _logService = logService;
 
             // ステートマシン設定
             _stateMachine = new StateMachine<GameManager>(this);
@@ -43,7 +49,6 @@ namespace Reversi.Managers
             {
                 // ステート変更時にReactivePropertyにも反映
                 _state.Value = (GameState) Enum.ToObject(typeof(GameState), stateId);
-                Debug.Log("Change: " + _state);
             });
             _stateMachine.Add<StateSelect>((int) GameState.Select);
             _stateMachine.Add<StatePlay>((int) GameState.Play);
@@ -76,8 +81,8 @@ namespace Reversi.Managers
 
                 // TODO 自由に切り替えられるようにする
                 // プレイヤーの選択
-                Owner._selectPlayer1Type = PlayerType.InputPlayer;
-                Owner._selectPlayer2Type = PlayerType.MiniMaxAIPlayer;
+                Owner._selectPlayer1Type = Owner._gameSettings.initPlayer1;
+                Owner._selectPlayer2Type = Owner._gameSettings.initPlayer2;
 
                 // ゲーム開始
                 StateMachine.ChangeState((int) GameState.Play);
@@ -121,13 +126,16 @@ namespace Reversi.Managers
                     //  全てのストーンが置けない場合、ゲーム終了
                     if (!Owner._stoneManager.IsCanPutStone())
                     {
-                        StateMachine.ChangeState((int)GameState.Result);
+                        EndGame();
                         return;
                     }
 
                     // TODO キャラクターが反応するようにする
-                    // 少し待機
-                    await UniTask.Delay(350);
+                    // アニメーション再生分、少し待機
+                    if (Owner._gameSettings.debugOption.isDisplayAnimation)
+                    {
+                        await UniTask.Delay(350);
+                    }
 
                     // プレイヤーの切り替え
                     Owner._playerManager.ChangePlayer(_tuneCount);
@@ -143,6 +151,15 @@ namespace Reversi.Managers
                     break;
                 }
             }
+
+            /// <summary>
+            /// ゲーム終了
+            /// </summary>
+            private void EndGame()
+            {
+                Owner._playerManager.EndGame();
+                StateMachine.ChangeState((int)GameState.Result);
+            }
         }
 
         // ----- 結果表示 -----
@@ -150,13 +167,15 @@ namespace Reversi.Managers
         {
             public override void OnStart()
             {
-                // TODO ちゃんと結果を表示する
-                Debug.Log("Finish Game!!");
+                // TODO UIに結果を表示する
+                Owner._logService.PrintLog(
+                    "player1=>" + Owner._playerManager.GetPlayer1ResultState().ToString() +
+                    " black: " + Owner._stoneManager.BlackStoneCount + " white: " + Owner._stoneManager.WhiteStoneCount);
             }
             public override void OnUpdate()
             {
                 // Return押下でもう一度プレイ
-                if (Input.GetKeyDown(KeyCode.Return))
+                if (Input.GetKeyDown(KeyCode.Return) || Owner._gameSettings.debugOption.isGameLoop)
                 {
                     StateMachine.ChangeState((int) GameState.Play);
                 }

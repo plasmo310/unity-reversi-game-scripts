@@ -10,12 +10,15 @@ namespace Reversi.Stones.Stone
     public partial class StoneBehaviour
     {
         [SerializeField] private GameObject putEffectPrefab;
+        [NonSerialized] public bool IsDisplayAnimation;
 
         /// <summary>
         /// ストーンを置くエフェクト
         /// </summary>
         private void StartPutEffect()
         {
+            // アニメーションさせない場合
+            if (!IsDisplayAnimation) return;
             // パーティクルを生成
             Instantiate(putEffectPrefab, transform);
         }
@@ -27,6 +30,12 @@ namespace Reversi.Stones.Stone
         /// <param name="callback"></param>
         private void StartTurnAnimation(StoneIndex putStoneIndex, Action callback)
         {
+            // アニメーションさせない場合
+            if (!IsDisplayAnimation)
+            {
+                callback();
+                return;
+            }
             // 色が変わる場合
             var putVec = Index - putStoneIndex;   // 置いた位置からのベクトル
             var waitTime = putVec.GetLength() * 0.08f; // アニメーションを遅らせる時間(遠いほど開始を遅らせる)

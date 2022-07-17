@@ -1,4 +1,6 @@
+using Reversi.Managers;
 using Reversi.Stones.Stone;
+using UnityEngine;
 
 namespace Reversi.Players
 {
@@ -9,8 +11,13 @@ namespace Reversi.Players
         /// </summary>
         public StoneState MyStoneState { get; }
 
-        public void StartTurn(StoneState[,] stoneStates);
-        public void UpdateTurn();
+        public bool IsWaitSelect { set; get; }
+
+        public void OnStartTurn(StoneState[,] stoneStates);
+        public void OnUpdateTurn();
+        public void OnEndGame(PlayerResultState resultState);
         public bool IsInputPlayer();
+        public void OnInstantiate(GameObject obj);
+        public void OnDestroy();
     }
 }

@@ -22,7 +22,7 @@ namespace Reversi.Players.AI
         private async void StartThinkAsync()
         {
             // 考える時間
-            await UniTask.Delay(200);
+            await WaitSelectTime(200);
 
             // ストーンを探索
             SelectStoneIndex = await SearchStoneTask();

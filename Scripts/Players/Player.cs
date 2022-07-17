@@ -1,5 +1,9 @@
 using System;
+using Cysharp.Threading.Tasks;
+using Reversi.Managers;
 using Reversi.Stones.Stone;
+using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Reversi.Players
 {
@@ -15,6 +19,16 @@ namespace Reversi.Players
         StoneState IPlayer.MyStoneState => MyStoneState;
 
         /// <summary>
+        /// ストーン選択処理を待機するか？
+        /// </summary>
+        private bool _isWaitSelect;
+        bool IPlayer.IsWaitSelect
+        {
+            get => _isWaitSelect;
+            set => _isWaitSelect = value;
+        }
+
+        /// <summary>
         /// ストーン配列(AIチェック用)
         /// </summary>
         protected StoneState[,] StoneStates;
@@ -24,6 +38,11 @@ namespace Reversi.Players
         /// 継承先のクラスでこの変数に設定する
         /// </summary>
         protected StoneIndex SelectStoneIndex;
+
+        /// <summary>
+        /// プレイヤーのゲームオブジェクト
+        /// </summary>
+        protected GameObject PlayerGameObject;
 
         /// <summary>
         /// ストーン選択処理
@@ -40,7 +59,7 @@ namespace Reversi.Players
         /// ターン開始
         /// </summary>
         /// <param name="stoneStates"></param>
-        public void StartTurn(StoneState[,] stoneStates)
+        public void OnStartTurn(StoneState[,] stoneStates)
         {
             // ストーン配列を設定して初期化
             StoneStates = stoneStates;
@@ -53,7 +72,7 @@ namespace Reversi.Players
         /// <summary>
         /// ターン更新
         /// </summary>
-        public void UpdateTurn()
+        public void OnUpdateTurn()
         {
             // 思考更新
             UpdateThink();
@@ -71,12 +90,54 @@ namespace Reversi.Players
         protected virtual void UpdateThink() { }
 
         /// <summary>
+        /// ゲーム終了処理
+        /// </summary>
+        public void OnEndGame(PlayerResultState resultState)
+        {
+            EndGame(resultState);
+        }
+        protected virtual void EndGame(PlayerResultState resultState) { }
+
+        /// <summary>
+        /// ストーン選択待機処理
+        /// </summary>
+        /// <param name="waitMs"></param>
+        protected async UniTask WaitSelectTime(int waitMs)
+        {
+            if (_isWaitSelect)
+            {
+                await UniTask.Delay(waitMs);
+            }
+        }
+
+        /// <summary>
         /// 入力プレイヤーかどうか？
         /// </summary>
         public virtual bool IsInputPlayer()
         {
             // 基本的にfalse
             return false;
+        }
+
+        /// <summary>
+        /// ゲームオブジェクトを生成する
+        /// </summary>
+        /// <param name="obj"></param>
+        public void OnInstantiate(GameObject obj)
+        {
+            PlayerGameObject = Object.Instantiate(obj);
+        }
+
+        /// <summary>
+        /// オブジェクトを破棄する
+        /// プレイヤー切り替えの際に呼び出す
+        /// </summary>
+        public void OnDestroy()
+        {
+            if (PlayerGameObject != null)
+            {
+                Object.Destroy(PlayerGameObject);
+            }
         }
     }
 }

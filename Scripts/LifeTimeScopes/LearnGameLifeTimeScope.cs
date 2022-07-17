@@ -7,7 +7,6 @@ using Reversi.Players.Input.Impl;
 using Reversi.Services;
 using Reversi.Services.Impl;
 using Reversi.Settings;
-using Reversi.UIs;
 using UnityEngine;
 using VContainer;
 using VContainer.Unity;
@@ -15,11 +14,10 @@ using VContainer.Unity;
 namespace Reversi.LifeTimeScopes
 {
     /// <summary>
-    /// Gameシーン LifeTimeScope
+    /// 学習用シーン LifeTimeScope
     /// </summary>
-    public class GameLifeTimeScope : LifetimeScope
+    public class LearnGameLifeTimeScope : LifetimeScope
     {
-        [SerializeField] private GamePresenter gamePresenter;
         [SerializeField] private BoardBehaviour boardBehaviour;
         [SerializeField] private GameSettings gameSettings;
 
@@ -34,7 +32,6 @@ namespace Reversi.LifeTimeScopes
             builder.Register<PlayerFactory>(Lifetime.Singleton);
 
             // コンポーネント登録
-            builder.RegisterComponent(gamePresenter);
             builder.RegisterComponent(boardBehaviour);
 
             // インスタンス登録

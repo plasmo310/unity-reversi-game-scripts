@@ -1,0 +1,37 @@
+behaviors:
+  Reversi:
+    # トレーナー種別
+    trainer_type: ppo
+    
+    # ハイパーパラメータ
+    hyperparameters:
+        
+      # PPO、SAC共通
+      batch_size: 32
+      buffer_size: 320
+      learning_rate: 3.0e-4
+      learning_rate_schedule: linear
+      
+      # PPO固有
+      beta: 0.005
+      epsilon: 0.2
+      lambd: 0.95
+      num_epoch: 3
+    
+    # ニューラルネットワーク
+    network_settings:
+      normalize: true
+      hidden_units: 128
+      num_layers: 2
+      vis_encode_type: simple
+    
+    # 報酬シグナル
+    reward_signals:
+      extrinsic:
+        gamma: 0.99
+        strength: 1.0
+    
+    # 基本設定
+    max_steps: 5000000
+    time_horizon: 1000
+    summary_freq: 5000

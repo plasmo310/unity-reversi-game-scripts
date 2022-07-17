@@ -1,7 +1,6 @@
 using System;
 using Reversi.Players;
-using Reversi.Players.AI;
-using Reversi.Players.Input;
+using Reversi.Settings;
 using Reversi.Stones.Stone;
 using VContainer;
 
@@ -13,7 +12,8 @@ namespace Reversi.Managers
     public class PlayerManager
     {
         private readonly StoneManager _stoneManager;
-        private readonly IInputEventProvider _inputEventProvider;
+        private readonly PlayerFactory _playerFactory;
+        private readonly GameSettings _gameSettings;
 
         /// <summary>
         /// プレイヤー
@@ -32,10 +32,11 @@ namespace Reversi.Managers
         private Action _changeNextTurnAction;
 
         [Inject]
-        public PlayerManager(StoneManager stoneManager, IInputEventProvider inputEventProvider)
+        public PlayerManager(StoneManager stoneManager, PlayerFactory playerFactory, GameSettings gameSettings)
         {
             _stoneManager = stoneManager;
-            _inputEventProvider = inputEventProvider;
+            _playerFactory = playerFactory;
+            _gameSettings = gameSettings;
         }
 
         /// <summary>
@@ -48,10 +49,32 @@ namespace Reversi.Managers
         {
             _changeNextTurnAction = changeNextTurnAction;
 
-            // ゲーム情報の設定
-            _player1 = CreatePlayer(player1Type, StoneState.White);
-            _player2 = CreatePlayer(player2Type, StoneState.Black);
+            // プレイヤー作成
+            // 学習中の場合は最初の一回のみ作成
+            if (!_gameSettings.debugOption.isLearnAgent || _activePlayer == null)
+            {
+                _player1 = _playerFactory.CreatePlayer(player1Type, StoneState.White, PutStone);
+                _player2 = _playerFactory.CreatePlayer(player2Type, StoneState.Black, PutStone);
+
+                // デバッグ情報の設定
+                _player1.IsWaitSelect = _gameSettings.debugOption.isWaitSelectStone;
+                _player2.IsWaitSelect = _gameSettings.debugOption.isWaitSelectStone;
+            }
             _activePlayer = _player1;
+        }
+
+        public void EndGame()
+        {
+            // プレイヤーを破棄する
+            _player1.OnEndGame(GetPlayer1ResultState());
+            _player2.OnEndGame(GetPlayer2ResultState());
+            // 学習中の場合には破棄しない
+            if (!_gameSettings.debugOption.isLearnAgent)
+            {
+                _player1.OnDestroy();
+                _player2.OnDestroy();
+                _activePlayer = null;
+            }
         }
 
         /// <summary>
@@ -62,7 +85,7 @@ namespace Reversi.Managers
             // 入力プレイヤーの場合、置けるストーンをフォーカスする
             if (_activePlayer.IsInputPlayer()) _stoneManager.SetFocusAllCanPutStones(_activePlayer.MyStoneState);
             // ターン開始
-            _activePlayer.StartTurn(_stoneManager.GetStoneStatesClone());
+            _activePlayer.OnStartTurn(_stoneManager.GetStoneStatesClone());
         }
 
         /// <summary>
@@ -71,7 +94,7 @@ namespace Reversi.Managers
         public void UpdateTurn()
         {
             // ターン更新
-            _activePlayer.UpdateTurn();
+            _activePlayer.OnUpdateTurn();
         }
 
         /// <summary>
@@ -126,27 +149,6 @@ namespace Reversi.Managers
                 // ターン切り替え
                 _changeNextTurnAction();
             }
-        }
-
-        /// <summary>
-        /// プレイヤー作成処理
-        /// </summary>
-        private IPlayer CreatePlayer(PlayerType playerType, StoneState stoneState)
-        {
-            switch (playerType)
-            {
-                case PlayerType.InputPlayer:
-                    return new InputPlayer(stoneState, PutStone, _inputEventProvider);
-                case PlayerType.RandomAIPlayer:
-                    return new RandomAIPlayer(stoneState, PutStone);
-                case PlayerType.MiniMaxAIPlayer:
-                    return new MiniMaxAIPlayer(stoneState, PutStone);
-                case PlayerType.MonteCarloAIPlayer:
-                    return new MonteCarloAIPlayer(stoneState, PutStone);
-                case PlayerType.MiniMaxMonteAIPlayer:
-                    return new MiniMaxMontePlayer(stoneState, PutStone);
-            }
-            return null;
         }
     }
 }

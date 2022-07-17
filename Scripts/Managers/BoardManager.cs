@@ -1,3 +1,4 @@
+using Reversi.Board;
 using Reversi.Services;
 using UnityEngine;
 using VContainer;
@@ -25,13 +26,12 @@ namespace Reversi.Managers
         private Vector3[,] _cellPositions;
 
         [Inject]
-        public BoardManager(IAssetsService assetsService)
+        public BoardManager(IAssetsService assetsService, BoardBehaviour boardBehaviour)
         {
             // 土台となるオブジェクトを生成
-            var board = GameObject.FindGameObjectWithTag("Board");
             _boardCellsBase = new GameObject("BoardCells");
-            _boardCellsBase.transform.SetParent(board.transform);
-            _boardCellsBase.transform.position = board.transform.position;
+            _boardCellsBase.transform.SetParent(boardBehaviour.transform);
+            _boardCellsBase.transform.position = boardBehaviour.transform.position;
 
             // Prefab読み込み
             _boardCellPrefab = assetsService.LoadAssets("BoardCell");
