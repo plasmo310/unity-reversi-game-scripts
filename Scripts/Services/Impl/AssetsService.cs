@@ -12,6 +12,11 @@ namespace Reversi.Services.Impl
         private readonly IDictionary<string, GameObject> _cachedAssetsDictionary = new Dictionary<string, GameObject>();
 
         /// <summary>
+        /// Prefab格納パス
+        /// </summary>
+        private static string PrefabPath = "Prefab/";
+
+        /// <summary>
         /// Assetsファイルの読み込み
         /// </summary>
         /// <param name="fileName">ファイル名</param>
@@ -21,7 +26,7 @@ namespace Reversi.Services.Impl
             // ファイル名をキーとしてキャッシュする
             if (!_cachedAssetsDictionary.ContainsKey(fileName))
             {
-                var asset = Resources.Load(fileName) as GameObject;
+                var asset = Resources.Load(PrefabPath + fileName) as GameObject;
                 _cachedAssetsDictionary.Add(fileName, asset);
             }
             return _cachedAssetsDictionary[fileName];

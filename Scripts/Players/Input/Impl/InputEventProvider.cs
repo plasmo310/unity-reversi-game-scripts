@@ -1,3 +1,4 @@
+using Reversi.Common;
 using Reversi.Stones.Stone;
 using UnityEngine;
 
@@ -11,9 +12,11 @@ namespace Reversi.Players.Input.Impl
         /// <returns></returns>
         public StoneBehaviour GetSelectStone()
         {
-            if (UnityEngine.Input.GetMouseButtonDown(0))
+            if (TouchUtil.IsScreenTouch())
             {
-                var ray = Camera.main.ScreenPointToRay(UnityEngine.Input.mousePosition);
+                var touch = TouchUtil.GetBeganTouch();
+                var touchPosition = TouchUtil.GetCurrentTouchPosition(touch);
+                var ray = Camera.main.ScreenPointToRay(touchPosition);
                 if (Physics.Raycast(ray, out var hit))
                 {
                     if (hit.collider.gameObject.CompareTag(StoneBehaviour.TagName))

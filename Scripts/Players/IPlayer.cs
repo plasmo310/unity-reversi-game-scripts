@@ -13,11 +13,16 @@ namespace Reversi.Players
 
         public bool IsWaitSelect { set; get; }
 
+        public void OnInitialize(PlayerType playerType, bool isDisplayAnimation);
         public void OnStartTurn(StoneState[,] stoneStates);
         public void OnUpdateTurn();
         public void OnEndGame(PlayerResultState resultState);
         public bool IsInputPlayer();
-        public void OnInstantiate(GameObject obj);
+        public void SetEmotionParameter(float emotion);
+        public void StartPutAnimation();
+        public void StartResultAnimation(PlayerResultState state);
+        public void OnInstantiate(GameObject obj, Transform parent = null);
+        public void OnInstantiateAgent(GameObject obj, Transform parent = null);
         public void OnDestroy();
     }
 }

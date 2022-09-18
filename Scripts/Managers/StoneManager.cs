@@ -17,6 +17,7 @@ namespace Reversi.Managers
     public class StoneManager
     {
         private readonly GameSettings _gameSettings;
+        private readonly BoardBehaviour _boardBehaviour;
 
         /// <summary>
         /// 各色ごとのストーンの数
@@ -51,11 +52,13 @@ namespace Reversi.Managers
         public StoneManager(IAssetsService assetsService, GameSettings gameSettings, BoardBehaviour boardBehaviour)
         {
             _gameSettings = gameSettings;
+            _boardBehaviour = boardBehaviour;
 
             // 土台となるオブジェクトを生成
             _stonesBase = new GameObject("Stones");
-            _stonesBase.transform.SetParent(boardBehaviour.transform);
-            _stonesBase.transform.position = boardBehaviour.transform.position;
+            _stonesBase.transform.SetParent(_boardBehaviour.transform);
+            _stonesBase.transform.position = _boardBehaviour.transform.position;
+            _stonesBase.transform.localScale = Vector3.one;
 
             // Prefab読み込み
             _stonePrefab = assetsService.LoadAssets("Stone");
@@ -64,10 +67,11 @@ namespace Reversi.Managers
         /// <summary>
         /// ストーン初期化
         /// </summary>
-        /// <param name="cellSideCount">一辺あたりのセル数</param>
-        /// <param name="getCellPosition">ボードのセル位置取得処理</param>
-        public void InitializeStones(int cellSideCount, Func<int, int, Vector3> getCellPosition)
+        public void InitializeStones()
         {
+            // 一辺あたりのセル数
+            var cellSideCount = BoardBehaviour.CellSideCount;
+
             // 作成済のストーンを削除
             foreach(Transform child in _stonesBase.transform){
                 UnityEngine.Object.Destroy(child.gameObject);
@@ -81,10 +85,11 @@ namespace Reversi.Managers
                 for (var z = 0; z < _viewStoneBehaviours.GetLength(1); z++)
                 {
                     var stone = UnityEngine.Object.Instantiate(_stonePrefab, _stonesBase.transform, true);
-                    stone.transform.localPosition = getCellPosition(x, z) + Vector3.up * StoneOffsetY;
+                    stone.transform.localPosition = _boardBehaviour.GetCellPosition(x, z) + Vector3.up * StoneOffsetY;
+                    stone.transform.localScale = _stonePrefab.transform.localScale;
                     _viewStoneBehaviours[x, z] = stone.GetComponent<StoneBehaviour>();
                     _viewStoneBehaviours[x, z].SetIndex(x, z);
-                    _viewStoneBehaviours[x, z].IsDisplayAnimation = _gameSettings.debugOption.isDisplayAnimation;
+                    _viewStoneBehaviours[x, z].IsDisplayAnimation = _gameSettings.DebugOption.isDisplayAnimation;
                     _stoneStates[x, z] = StoneState.Empty;
                 }
             }
@@ -176,6 +181,28 @@ namespace Reversi.Managers
                 return PlayerResultState.Draw;
             }
             return winStoneState == playerStoneState ? PlayerResultState.Win : PlayerResultState.Lose;
+        }
+
+        /// <summary>
+        /// 指定されたストーンの割合を返却する
+        /// </summary>
+        /// <param name="playerStoneState"></param>
+        /// <returns></returns>
+        public float GetStoneStateRate(StoneState playerStoneState)
+        {
+            var rate = 0.0f;
+            StoneCalculator.CheckStoneColorCount(_stoneStates, (whiteCount, blackCount) =>
+            {
+                if (playerStoneState == StoneState.White)
+                {
+                    rate = (float) whiteCount / (whiteCount + blackCount);
+                }
+                else
+                {
+                    rate = (float) blackCount / (whiteCount + blackCount);
+                }
+            });
+            return rate;
         }
 
         /// <summary>

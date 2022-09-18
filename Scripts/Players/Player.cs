@@ -1,6 +1,9 @@
 using System;
 using Cysharp.Threading.Tasks;
 using Reversi.Managers;
+using Reversi.Players.Agents;
+using Reversi.Players.Animation;
+using Reversi.Players.Display;
 using Reversi.Stones.Stone;
 using UnityEngine;
 using Object = UnityEngine.Object;
@@ -40,9 +43,22 @@ namespace Reversi.Players
         protected StoneIndex SelectStoneIndex;
 
         /// <summary>
+        /// 感情値
+        /// </summary>
+        protected enum PlayerEmotion
+        {
+            Normal = 0, // 普通
+            Heat = 1,   // 焦り
+            Sad = -1,   // 悲しみ
+        }
+        protected PlayerEmotion Emotion;
+
+        /// <summary>
         /// プレイヤーのゲームオブジェクト
         /// </summary>
         protected GameObject PlayerGameObject;
+        protected ReversiAIAgent PlayerAIAgent;
+        private PlayerAnimationBehaviour _playerAnimationBehaviour;
 
         /// <summary>
         /// ストーン選択処理
@@ -53,6 +69,24 @@ namespace Reversi.Players
         {
             _putStoneAction = putStoneAction;
             MyStoneState = myStoneState;
+        }
+
+        /// <summary>
+        /// 初期化
+        /// </summary>
+        /// <param name="playerType"></param>
+        /// <param name="isDisplayAnimation"></param>
+        public void OnInitialize(PlayerType playerType, bool isDisplayAnimation)
+        {
+            // アニメーションさせる場合のみDisplayPlayerBehaviourを初期化
+            if (PlayerGameObject == null || !isDisplayAnimation) return;
+
+            // DisplayPlayerBehaviourを取得
+            _playerAnimationBehaviour = PlayerGameObject.GetComponent<PlayerAnimationBehaviour>();
+
+            // 初期化
+            var playerDisplayBehaviour = PlayerGameObject.GetComponentInParent<PlayerDisplayBehaviour>();
+            if (playerDisplayBehaviour != null) playerDisplayBehaviour.Initialize(playerType);
         }
 
         /// <summary>
@@ -94,6 +128,11 @@ namespace Reversi.Players
         /// </summary>
         public void OnEndGame(PlayerResultState resultState)
         {
+            // Agentが設定されていればゲーム終了処理を呼ぶ
+            if (PlayerAIAgent != null)
+            {
+                PlayerAIAgent.OnGameEnd(resultState);
+            }
             EndGame(resultState);
         }
         protected virtual void EndGame(PlayerResultState resultState) { }
@@ -120,12 +159,61 @@ namespace Reversi.Players
         }
 
         /// <summary>
+        /// 感情値を設定
+        /// </summary>
+        /// <param name="myStoneStateRate">自分のストーン比率</param>
+        public void SetEmotionParameter(float myStoneStateRate)
+        {
+            if (_playerAnimationBehaviour == null) return;
+            Emotion = PlayerEmotion.Normal;
+            if (myStoneStateRate < 0.6f) Emotion = PlayerEmotion.Heat;  // やばい時
+            if (myStoneStateRate < 0.3f) Emotion = PlayerEmotion.Sad; // 更にやばい時
+            _playerAnimationBehaviour.SetEmotionInt((int) Emotion);
+        }
+
+        /// <summary>
+        /// ストーンを置くアニメーション開始
+        /// </summary>
+        public void StartPutAnimation()
+        {
+            if (_playerAnimationBehaviour == null) return;
+            _playerAnimationBehaviour.StartPutAnimation();
+        }
+
+        /// <summary>
+        /// 結果アニメーション表示
+        /// </summary>
+        /// <param name="state">勝敗結果</param>
+        public void StartResultAnimation(PlayerResultState state)
+        {
+            if (_playerAnimationBehaviour == null) return;
+
+            // 勝利した場合のみ1を設定
+            var result = state == PlayerResultState.Win ? 1 : -1;
+            _playerAnimationBehaviour.SetResult(result);
+        }
+
+        /// <summary>
         /// ゲームオブジェクトを生成する
         /// </summary>
         /// <param name="obj"></param>
-        public void OnInstantiate(GameObject obj)
+        /// <param name="parent"></param>
+        public void OnInstantiate(GameObject obj, Transform parent = null)
         {
-            PlayerGameObject = Object.Instantiate(obj);
+            // ゲームオブジェクト生成
+            PlayerGameObject = parent != null ? Object.Instantiate(obj, parent) : Object.Instantiate(obj);
+        }
+
+        /// <summary>
+        /// Agentを生成する
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <param name="parent"></param>
+        public void OnInstantiateAgent(GameObject obj, Transform parent = null)
+        {
+            // ゲームオブジェクト生成してAgentを設定
+            var agentObj = parent != null ? Object.Instantiate(obj, parent) : Object.Instantiate(obj);
+            PlayerAIAgent = agentObj.GetComponent<ReversiAIAgent>();
         }
 
         /// <summary>

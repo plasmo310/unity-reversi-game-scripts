@@ -1,6 +1,8 @@
 using System;
 using Cysharp.Threading.Tasks;
+using Reversi.Stones;
 using Reversi.Stones.Stone;
+using UnityEngine;
 
 namespace Reversi.Players.AI
 {
@@ -35,7 +37,8 @@ namespace Reversi.Players.AI
         private async UniTask<StoneIndex> SearchStoneTask()
         {
             await UniTask.SwitchToThreadPool(); // 時間がかかるため別スレッドで実行
-            var result = AIAlgorithm.SearchMonteCarloStone(StoneStates, MyStoneState, 100);
+            var ratio = StoneCalculator.GetGameRate(StoneStates); // 終盤ほど数を増やすため進捗状況を取得
+            var result = AIAlgorithm.SearchMonteCarloStone(StoneStates, MyStoneState, Mathf.RoundToInt(100 * ratio));
             await UniTask.SwitchToMainThread();
             return result;
         }

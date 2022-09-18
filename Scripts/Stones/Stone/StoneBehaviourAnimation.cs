@@ -20,7 +20,8 @@ namespace Reversi.Stones.Stone
             // アニメーションさせない場合
             if (!IsDisplayAnimation) return;
             // パーティクルを生成
-            Instantiate(putEffectPrefab, transform);
+            var effect = Instantiate(putEffectPrefab, transform);
+            effect.transform.localScale = putEffectPrefab.transform.localScale;
         }
 
         /// <summary>

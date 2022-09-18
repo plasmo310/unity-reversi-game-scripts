@@ -25,7 +25,6 @@ namespace Reversi.LifeTimeScopes
         {
             // 各クラスを登録
             builder.Register<GameManager>(Lifetime.Singleton);
-            builder.Register<BoardManager>(Lifetime.Singleton);
             builder.Register<StoneManager>(Lifetime.Singleton);
             builder.Register<PlayerManager>(Lifetime.Singleton);
             builder.Register<IInputEventProvider, InputEventProvider>(Lifetime.Singleton);
@@ -41,7 +40,7 @@ namespace Reversi.LifeTimeScopes
             builder.RegisterEntryPoint<GameEntryPoint>();
 
             // デバッグ用設定
-            if (gameSettings.debugOption.isWriteDebugLog)
+            if (gameSettings.DebugOption.isWriteDebugLog)
             {
                 builder.Register<ILogService, LogWriterService>(Lifetime.Singleton);
             }

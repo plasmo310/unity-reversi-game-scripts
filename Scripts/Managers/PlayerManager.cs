@@ -51,14 +51,18 @@ namespace Reversi.Managers
 
             // プレイヤー作成
             // 学習中の場合は最初の一回のみ作成
-            if (!_gameSettings.debugOption.isLearnAgent || _activePlayer == null)
+            if (!_gameSettings.DebugOption.isLearnAgent || _activePlayer == null)
             {
-                _player1 = _playerFactory.CreatePlayer(player1Type, StoneState.White, PutStone);
-                _player2 = _playerFactory.CreatePlayer(player2Type, StoneState.Black, PutStone);
+                _player1 = _playerFactory.CreatePlayer(player1Type, StoneState.White, PutStone, _gameSettings.Player1Transform);
+                _player2 = _playerFactory.CreatePlayer(player2Type, StoneState.Black, PutStone, _gameSettings.Player2Transform);
+
+                // 初期化
+                _player1.OnInitialize(player1Type, _gameSettings.DebugOption.isDisplayAnimation);
+                _player2.OnInitialize(player2Type, _gameSettings.DebugOption.isDisplayAnimation);
 
                 // デバッグ情報の設定
-                _player1.IsWaitSelect = _gameSettings.debugOption.isWaitSelectStone;
-                _player2.IsWaitSelect = _gameSettings.debugOption.isWaitSelectStone;
+                _player1.IsWaitSelect = _gameSettings.DebugOption.isWaitSelectStone;
+                _player2.IsWaitSelect = _gameSettings.DebugOption.isWaitSelectStone;
             }
             _activePlayer = _player1;
         }
@@ -66,10 +70,23 @@ namespace Reversi.Managers
         public void EndGame()
         {
             // プレイヤーを破棄する
-            _player1.OnEndGame(GetPlayer1ResultState());
-            _player2.OnEndGame(GetPlayer2ResultState());
+            var player1ResultState = GetPlayer1ResultState();
+            var player2ResultState = GetPlayer2ResultState();
+            _player1.OnEndGame(player1ResultState);
+            _player2.OnEndGame(player2ResultState);
+
+            // 結果アニメーションを再生
+            if (_gameSettings.DebugOption.isDisplayAnimation)
+            {
+                _player1.StartResultAnimation(player1ResultState);
+                _player2.StartResultAnimation(player2ResultState);
+            }
+        }
+
+        public void DestroyPlayer()
+        {
             // 学習中の場合には破棄しない
-            if (!_gameSettings.debugOption.isLearnAgent)
+            if (!_gameSettings.DebugOption.isLearnAgent)
             {
                 _player1.OnDestroy();
                 _player2.OnDestroy();
@@ -143,6 +160,16 @@ namespace Reversi.Managers
             // ストーン置く
             if (_stoneManager.PutStone(stoneState, x, z))
             {
+                // ストーン比率からエモーションを設定
+                _player1.SetEmotionParameter(_stoneManager.GetStoneStateRate(_player1.MyStoneState));
+                _player2.SetEmotionParameter(_stoneManager.GetStoneStateRate(_player2.MyStoneState));
+
+                // ストーンを置くアニメーションを再生
+                if (_gameSettings.DebugOption.isDisplayAnimation)
+                {
+                    _activePlayer.StartPutAnimation();
+                }
+
                 // フォーカス解除
                 _stoneManager.ReleaseFocusStones();
 

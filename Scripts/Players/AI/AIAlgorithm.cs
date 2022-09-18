@@ -10,6 +10,19 @@ namespace Reversi.Players.AI
     public static class AIAlgorithm
     {
         /// <summary>
+        /// 置けるストーンの中からランダムに選んで返却する
+        /// </summary>
+        /// <param name="stoneStates"></param>
+        /// <param name="putStoneState"></param>
+        /// <returns></returns>
+        public static StoneIndex GetRandomStoneIndex(StoneState[,] stoneStates, StoneState putStoneState)
+        {
+            var canPutStones = StoneCalculator.GetAllCanPutStonesIndex(stoneStates, putStoneState);
+            var randomIndex = UnityEngine.Random.Range(0, canPutStones.Count);
+            return canPutStones[randomIndex];
+        }
+
+        /// <summary>
         /// モンテカルロ法によるストーンの探索
         /// </summary>
         /// <param name="stoneStates">ストーン状態配列</param>

@@ -1,25 +1,51 @@
 using System;
+using Reversi.Managers;
 using Reversi.Players;
 using UnityEngine;
 
 namespace Reversi.Settings
 {
     [CreateAssetMenu(fileName = "GameSettings", menuName = "Reversi/GameSettings")]
-    public class GameSettings : ScriptableObject
+    public class GameSettings : ScriptableObject, ISerializationCallbackReceiver
     {
         /// <summary>
         /// デバッグオプション
         /// </summary>
-        public DebugOption debugOption;
+        [SerializeField] private GameDebugOption debugOption;
+        public GameDebugOption DebugOption => debugOption;
+
         /// <summary>
-        /// プレイヤー
+        /// 選択したゲームモード
         /// </summary>
-        public PlayerType initPlayer1;
-        public PlayerType initPlayer2;
+        [SerializeField] private GameModeType initSelectGameMode;
+        [NonSerialized] public GameModeType SelectGameModeType;
+
+        /// <summary>
+        /// 選択したプレイヤー
+        /// </summary>
+        [SerializeField] private PlayerType initSelectPlayer1;
+        [SerializeField] private PlayerType initSelectPlayer2;
+        [NonSerialized] public PlayerType SelectPlayer1;
+        [NonSerialized] public PlayerType SelectPlayer2;
+
+        /// <summary>
+        /// プレイヤー位置
+        /// ※ランタイムでのみ設定
+        /// </summary>
+        [NonSerialized] public Transform Player1Transform;
+        [NonSerialized] public Transform Player2Transform;
+        public void OnBeforeSerialize() { }
+        public void OnAfterDeserialize()
+        {
+            // ランタイムでの書き込み用に値をコピーする
+            SelectGameModeType = initSelectGameMode;
+            SelectPlayer1 = initSelectPlayer1;
+            SelectPlayer2 = initSelectPlayer2;
+        }
     }
 
     [Serializable]
-    public class DebugOption
+    public class GameDebugOption
     {
         /// <summary>
         /// ゲームをループさせるか？

@@ -15,6 +15,7 @@ namespace Reversi.LifeTimeScopes
             // サービス登録
             builder.Register<IAssetsService, AssetsService>(Lifetime.Singleton);
             builder.Register<ILogService, LogDebugService>(Lifetime.Singleton);
+            builder.Register<IAudioService, AudioService>(Lifetime.Singleton);
         }
     }
 }
