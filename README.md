@@ -1,5 +1,6 @@
 # unity-reversi-game-scripts
-Unityで作ったリバーシのスクリプト。</br>5(+3)種類のAIと対戦することができます。
+Unityで作ったリバーシのスクリプト。</br>5(+3)種類のAIと対戦することができます。<br>
+<img src="https://user-images.githubusercontent.com/77447256/194733487-3d9bd8d7-4c14-4932-88d6-9aca4230c905.png" width="240px"> <img src="https://user-images.githubusercontent.com/77447256/194733489-a6a41a03-172c-4dd8-bd63-97e35c1086c4.png" width="240px"> <img src="https://user-images.githubusercontent.com/77447256/194733491-5737b966-fd4e-4cdc-a9b6-4a542a436d41.png" width="240px">
 ### 改訂履歴
 - v1.0.0</br>リリースに向けてUI、広告等のその他機能を実装
 - v0.4.0</br>各プレイヤーのキャラクターを作成、選択できるよう実装
