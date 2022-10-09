@@ -63,9 +63,6 @@ namespace Reversi.Board
         /// <summary>
         /// 指定セルの位置を取得
         /// </summary>
-        /// <param name="x"></param>
-        /// <param name="z"></param>
-        /// <returns></returns>
         public Vector3 GetCellPosition(int x, int z)
         {
             return _cellPositions[x, z];

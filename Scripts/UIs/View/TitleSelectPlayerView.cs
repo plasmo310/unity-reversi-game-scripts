@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Reversi.Extensions;
 using Reversi.Players;
@@ -22,32 +21,56 @@ namespace Reversi.UIs.View
         /// <summary>
         /// プレイヤー選択Toggles
         /// </summary>
-        [SerializeField] private List<TitleSelectPlayerToggle> selectPlayerToggles;
+        private readonly List<TitleSelectPlayerToggle> _selectPlayerToggles = new List<TitleSelectPlayerToggle>();
+
+        [SerializeField] private ToggleGroup selectPlayerToggleGroup;
+        [SerializeField] private GameObject selectPlayerTogglePrefab;
+        public void CreatePlayerToggle(PlayerType playerType, Sprite playerSprite, Color playerColor, string optionalText, bool isRelease)
+        {
+            // Toggleを生成して追加
+            var playerToggle = Instantiate(selectPlayerTogglePrefab, selectPlayerToggleGroup.transform)
+                .GetComponent<TitleSelectPlayerToggle>();
+            playerToggle.InitializeToggle(selectPlayerToggleGroup, playerType, playerSprite, playerColor, optionalText, isRelease);
+            _selectPlayerToggles.Add(playerToggle);
+        }
         public void ResetSelectPlayerToggles()
         {
             // 全ての選択状態をfalseにする
-            foreach (var selectPlayerToggle in selectPlayerToggles)
+            foreach (var selectPlayerToggle in _selectPlayerToggles)
             {
                 selectPlayerToggle.SetIsOn(false);
             }
             // 先頭のToggle(None)を選択状態にする
-            selectPlayerToggles[0].SetIsOn(true);
+            _selectPlayerToggles[0].SetIsOn(true);
         }
         public void SetListenerSelectPlayerToggles(UnityAction<bool, PlayerType> action)
         {
-            foreach (var selectPlayerToggle in selectPlayerToggles)
+            foreach (var selectPlayerToggle in _selectPlayerToggles)
             {
                 selectPlayerToggle.SetListener(action);
             }
         }
 
         /// <summary>
+        /// 選択メッセージ
+        /// </summary>
+        [SerializeField] private TextMeshProUGUI selectMessageText;
+        public void SetActiveSelectMessageText(bool isActive)
+        {
+            selectMessageText.gameObject.SetActive(isActive);
+        }
+        public void SetTextSelectMessageText(string text)
+        {
+            selectMessageText.SetTextForDynamic(text);
+        }
+
+        /// <summary>
         /// 決定ボタン
         /// </summary>
         [SerializeField] private Button decideButton;
-        public void SetInteractableDecideButton(bool isActive)
+        public void SetActiveDecideButton(bool isActive)
         {
-            decideButton.interactable = isActive;
+            decideButton.gameObject.SetActive(isActive);
         }
         public void SetListenerDecideButton(UnityAction action)
         {

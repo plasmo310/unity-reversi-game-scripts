@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Reversi.Managers;
 using Reversi.Players.Agents;
@@ -13,13 +14,19 @@ namespace Reversi.Players
     /// <summary>
     /// プレイヤー共通クラス
     /// </summary>
-    public abstract class Player : IPlayer
+    public abstract class Player : IPlayer, IDisposable
     {
         /// <summary>
         /// 自分のストーン状態(黒or白)
         /// </summary>
         protected readonly StoneState MyStoneState;
         StoneState IPlayer.MyStoneState => MyStoneState;
+
+        /// <summary>
+        /// 自分のプレイヤー種類
+        /// </summary>
+        private PlayerType _playerType;
+        PlayerType IPlayer.MyPlayerType => _playerType;
 
         /// <summary>
         /// ストーン選択処理を待機するか？
@@ -56,7 +63,7 @@ namespace Reversi.Players
         /// <summary>
         /// プレイヤーのゲームオブジェクト
         /// </summary>
-        protected GameObject PlayerGameObject;
+        private GameObject _playerGameObject;
         protected ReversiAIAgent PlayerAIAgent;
         private PlayerAnimationBehaviour _playerAnimationBehaviour;
 
@@ -65,10 +72,23 @@ namespace Reversi.Players
         /// </summary>
         private readonly Action<StoneState, int, int> _putStoneAction;
 
+        /// <summary>
+        /// キャンセルトークン
+        /// </summary>
+        protected readonly CancellationTokenSource CancellationTokenSource;
+
         protected Player(StoneState myStoneState, Action<StoneState, int, int> putStoneAction)
         {
             _putStoneAction = putStoneAction;
             MyStoneState = myStoneState;
+
+            // キャンセルトークン発行
+            CancellationTokenSource = new CancellationTokenSource();
+        }
+
+        public void Dispose()
+        {
+            CancellationTokenSource?.Cancel();
         }
 
         /// <summary>
@@ -79,13 +99,15 @@ namespace Reversi.Players
         public void OnInitialize(PlayerType playerType, bool isDisplayAnimation)
         {
             // アニメーションさせる場合のみDisplayPlayerBehaviourを初期化
-            if (PlayerGameObject == null || !isDisplayAnimation) return;
+            if (_playerGameObject == null || !isDisplayAnimation) return;
+
+            _playerType = playerType;
 
             // DisplayPlayerBehaviourを取得
-            _playerAnimationBehaviour = PlayerGameObject.GetComponent<PlayerAnimationBehaviour>();
+            _playerAnimationBehaviour = _playerGameObject.GetComponent<PlayerAnimationBehaviour>();
 
             // 初期化
-            var playerDisplayBehaviour = PlayerGameObject.GetComponentInParent<PlayerDisplayBehaviour>();
+            var playerDisplayBehaviour = _playerGameObject.GetComponentInParent<PlayerDisplayBehaviour>();
             if (playerDisplayBehaviour != null) playerDisplayBehaviour.Initialize(playerType);
         }
 
@@ -140,12 +162,11 @@ namespace Reversi.Players
         /// <summary>
         /// ストーン選択待機処理
         /// </summary>
-        /// <param name="waitMs"></param>
-        protected async UniTask WaitSelectTime(int waitMs)
+        protected async UniTask WaitSelectTime(int waitMs, CancellationToken token)
         {
             if (_isWaitSelect)
             {
-                await UniTask.Delay(waitMs);
+                await UniTask.Delay(waitMs, cancellationToken: token);
             }
         }
 
@@ -196,19 +217,15 @@ namespace Reversi.Players
         /// <summary>
         /// ゲームオブジェクトを生成する
         /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="parent"></param>
         public void OnInstantiate(GameObject obj, Transform parent = null)
         {
             // ゲームオブジェクト生成
-            PlayerGameObject = parent != null ? Object.Instantiate(obj, parent) : Object.Instantiate(obj);
+            _playerGameObject = parent != null ? Object.Instantiate(obj, parent) : Object.Instantiate(obj);
         }
 
         /// <summary>
-        /// Agentを生成する
+        /// 機械学習Agentを生成する
         /// </summary>
-        /// <param name="obj"></param>
-        /// <param name="parent"></param>
         public void OnInstantiateAgent(GameObject obj, Transform parent = null)
         {
             // ゲームオブジェクト生成してAgentを設定
@@ -222,9 +239,9 @@ namespace Reversi.Players
         /// </summary>
         public void OnDestroy()
         {
-            if (PlayerGameObject != null)
+            if (_playerGameObject != null)
             {
-                Object.Destroy(PlayerGameObject);
+                Object.Destroy(_playerGameObject);
             }
         }
     }

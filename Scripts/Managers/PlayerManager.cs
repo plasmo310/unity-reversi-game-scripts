@@ -1,7 +1,9 @@
 using System;
+using Reversi.Data;
 using Reversi.Players;
 using Reversi.Settings;
 using Reversi.Stones.Stone;
+using UniRx;
 using VContainer;
 
 namespace Reversi.Managers
@@ -9,11 +11,12 @@ namespace Reversi.Managers
     /// <summary>
     /// プレイヤー管理クラス
     /// </summary>
-    public class PlayerManager
+    public class PlayerManager : IDisposable
     {
         private readonly StoneManager _stoneManager;
         private readonly PlayerFactory _playerFactory;
         private readonly GameSettings _gameSettings;
+        private readonly PlayerTypeInfoData _playerTypeInfoData;
 
         /// <summary>
         /// プレイヤー
@@ -24,7 +27,8 @@ namespace Reversi.Managers
         /// <summary>
         /// アクティブプレイヤー
         /// </summary>
-        private IPlayer _activePlayer;
+        public IReadOnlyReactiveProperty<IPlayer> ActivePlayer => _activePlayer;
+        private ReactiveProperty<IPlayer> _activePlayer = new(null);
 
         /// <summary>
         /// ゲーム終了処理
@@ -32,11 +36,18 @@ namespace Reversi.Managers
         private Action _changeNextTurnAction;
 
         [Inject]
-        public PlayerManager(StoneManager stoneManager, PlayerFactory playerFactory, GameSettings gameSettings)
+        public PlayerManager(StoneManager stoneManager, PlayerFactory playerFactory, GameSettings gameSettings, PlayerTypeInfoData playerTypeInfoDataData)
         {
             _stoneManager = stoneManager;
             _playerFactory = playerFactory;
             _gameSettings = gameSettings;
+            _playerTypeInfoData = playerTypeInfoDataData;
+        }
+
+        public void Dispose()
+        {
+            // 購読解除
+            _activePlayer.Dispose();
         }
 
         /// <summary>
@@ -51,7 +62,7 @@ namespace Reversi.Managers
 
             // プレイヤー作成
             // 学習中の場合は最初の一回のみ作成
-            if (!_gameSettings.DebugOption.isLearnAgent || _activePlayer == null)
+            if (!_gameSettings.DebugOption.isLearnAgent || _activePlayer.Value == null)
             {
                 _player1 = _playerFactory.CreatePlayer(player1Type, StoneState.White, PutStone, _gameSettings.Player1Transform);
                 _player2 = _playerFactory.CreatePlayer(player2Type, StoneState.Black, PutStone, _gameSettings.Player2Transform);
@@ -64,11 +75,26 @@ namespace Reversi.Managers
                 _player1.IsWaitSelect = _gameSettings.DebugOption.isWaitSelectStone;
                 _player2.IsWaitSelect = _gameSettings.DebugOption.isWaitSelectStone;
             }
-            _activePlayer = _player1;
+
+            // nullに設定
+            _activePlayer.Value = null;
+        }
+
+        public void StartGame()
+        {
+            // プレイヤー1をアクティブプレイヤーに設定
+            _activePlayer.Value = _player1;
         }
 
         public void EndGame()
         {
+            // アクティブプレイヤーを初期化
+            // 学習中の場合には破棄しない
+            if (!_gameSettings.DebugOption.isLearnAgent)
+            {
+                _activePlayer.Value = null;
+            }
+
             // プレイヤーを破棄する
             var player1ResultState = GetPlayer1ResultState();
             var player2ResultState = GetPlayer2ResultState();
@@ -90,7 +116,6 @@ namespace Reversi.Managers
             {
                 _player1.OnDestroy();
                 _player2.OnDestroy();
-                _activePlayer = null;
             }
         }
 
@@ -100,9 +125,9 @@ namespace Reversi.Managers
         public void StartTurn()
         {
             // 入力プレイヤーの場合、置けるストーンをフォーカスする
-            if (_activePlayer.IsInputPlayer()) _stoneManager.SetFocusAllCanPutStones(_activePlayer.MyStoneState);
+            if (_activePlayer.Value.IsInputPlayer()) _stoneManager.SetFocusAllCanPutStones(_activePlayer.Value.MyStoneState);
             // ターン開始
-            _activePlayer.OnStartTurn(_stoneManager.GetStoneStatesClone());
+            _activePlayer.Value.OnStartTurn(_stoneManager.GetStoneStatesClone());
         }
 
         /// <summary>
@@ -110,18 +135,28 @@ namespace Reversi.Managers
         /// </summary>
         public void UpdateTurn()
         {
+            if (_activePlayer.Value == null) return;
             // ターン更新
-            _activePlayer.OnUpdateTurn();
+            _activePlayer.Value.OnUpdateTurn();
+        }
+
+        /// <summary>
+        /// ターン終了処理
+        /// </summary>
+        public void EndTurn()
+        {
+            // アクティブプレイヤーを初期化
+            _activePlayer.Value = null;
         }
 
         /// <summary>
         /// プレイヤー切り替え
         /// </summary>
-        /// <param name="turnCount"></param>
+        /// <param name="turnCount">ターン数</param>
         public void ChangePlayer(int turnCount)
         {
             var isFirstTurn = turnCount % 2 == 0;
-            _activePlayer = isFirstTurn ? _player1 : _player2;
+            _activePlayer.Value = isFirstTurn ? _player1 : _player2;
         }
 
         /// <summary>
@@ -130,20 +165,42 @@ namespace Reversi.Managers
         /// <returns></returns>
         public bool IsCanPutStoneActivePlayer()
         {
-            return _stoneManager.GetAllCanPutStonesIndex(_activePlayer.MyStoneState).Count > 0;
+            return _stoneManager.GetAllCanPutStonesIndex(_activePlayer.Value.MyStoneState).Count > 0;
         }
 
         /// <summary>
-        /// プレイヤー1の結果状態を返却する
+        /// プレイヤー名を返却する
+        /// </summary>
+        public string GetPlayer1Name()
+        {
+            var playerName = _playerTypeInfoData.GetPlayerTypeInfo(_player1.MyPlayerType)?.name;
+            return playerName ?? "";
+        }
+        public string GetPlayer2Name()
+        {
+            var playerName = _playerTypeInfoData.GetPlayerTypeInfo(_player2.MyPlayerType)?.name;
+            return playerName ?? "";
+        }
+
+        /// <summary>
+        /// プレイヤー種別を返却する
+        /// </summary>
+        public PlayerType GetPlayer1Type()
+        {
+            return _player1.MyPlayerType;
+        }
+        public PlayerType GetPlayer2Type()
+        {
+            return _player2.MyPlayerType;
+        }
+
+        /// <summary>
+        /// プレイヤーの結果を返却する
         /// </summary>
         public PlayerResultState GetPlayer1ResultState()
         {
             return _stoneManager.GetPlayerResultState(_player1.MyStoneState);
         }
-
-        /// <summary>
-        /// プレイヤー2の結果状態を返却する
-        /// </summary>
         public PlayerResultState GetPlayer2ResultState()
         {
             return _stoneManager.GetPlayerResultState(_player2.MyStoneState);
@@ -167,7 +224,7 @@ namespace Reversi.Managers
                 // ストーンを置くアニメーションを再生
                 if (_gameSettings.DebugOption.isDisplayAnimation)
                 {
-                    _activePlayer.StartPutAnimation();
+                    _activePlayer.Value.StartPutAnimation();
                 }
 
                 // フォーカス解除

@@ -1,4 +1,3 @@
-using System;
 using Reversi.Const;
 using UnityEngine;
 using UnityEngine.SceneManagement;

@@ -30,6 +30,18 @@ namespace Reversi.Data
             /// 詳細情報
             /// </summary>
             public string detail;
+            /// <summary>
+            /// オプションラベル
+            /// </summary>
+            public string optionalLabel;
+            /// <summary>
+            /// アイコン
+            /// </summary>
+            public Sprite iconSprite;
+            /// <summary>
+            /// イメージカラー
+            /// </summary>
+            public Color imageColor;
         }
 
         /// <summary>
@@ -46,7 +58,10 @@ namespace Reversi.Data
                     playerType = PlayerType.None,
                     name = "",
                     studentNo = "",
-                    detail = ""
+                    detail = "",
+                    optionalLabel = "",
+                    iconSprite = null,
+                    imageColor = Color.white
                 };
             }
             return playerTypeInfo;

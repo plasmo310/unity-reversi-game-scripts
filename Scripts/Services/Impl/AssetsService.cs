@@ -14,7 +14,7 @@ namespace Reversi.Services.Impl
         /// <summary>
         /// Prefab格納パス
         /// </summary>
-        private static string PrefabPath = "Prefab/";
+        private static readonly string PrefabPath = "Prefab/";
 
         /// <summary>
         /// Assetsファイルの読み込み

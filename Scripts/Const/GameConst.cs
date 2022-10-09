@@ -10,6 +10,7 @@ namespace Reversi.Const
         /// </summary>
         public static readonly string SceneNameTitle = "TitleScene";
         public static readonly string SceneNameGame = "GameScene";
+        public static readonly string SceneNameInterstitial = "InterstitialScene";
 
         /// <summary>
         /// レイヤー名

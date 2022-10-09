@@ -21,8 +21,19 @@ namespace Reversi.Players.Display
         private void Awake()
         {
             _selectPlayerType = PlayerType.None;
-            // 最初は全て表示する
-            HideAllSelectPlayer();
+        }
+
+        /// <summary>
+        /// 表示対象のプレイヤーを設定する
+        /// </summary>
+        private List<PlayerType> _showTargetPlayerTypes;
+        public void SetShowTargetPlayerType(PlayerType playerType)
+        {
+            if (_showTargetPlayerTypes == null)
+            {
+                _showTargetPlayerTypes = new List<PlayerType>();
+            }
+            _showTargetPlayerTypes.Add(playerType);
         }
 
         /// <summary>
@@ -42,8 +53,16 @@ namespace Reversi.Players.Display
                 return;
             }
             // 指定されたプレイヤーのみ表示する
-            selectPlayerInfos.ForEach(x => x.playerObject.SetActive(false));
-            selectPlayerInfos.Find(x => x.playerType == playerType).playerObject.SetActive(true);
+            selectPlayerInfos.ForEach(x =>
+            {
+                var isDisplay = x.playerType == playerType;
+                // AIRobotの場合、いずれかの種別ならtrue
+                if (PlayerTypeUtil.IsAiRobotType(playerType))
+                {
+                    isDisplay = PlayerTypeUtil.IsAiRobotType(x.playerType);
+                }
+                ChangeDisplayPlayer(x, isDisplay);
+            });
         }
 
         /// <summary>
@@ -53,7 +72,9 @@ namespace Reversi.Players.Display
         {
             foreach (var selectPlayerInfo in selectPlayerInfos)
             {
-                selectPlayerInfo.playerObject.SetActive(true);
+                // 表示対象外のプレイヤーは省く
+                if (!_showTargetPlayerTypes.Contains(selectPlayerInfo.playerType)) return;
+                ChangeDisplayPlayer(selectPlayerInfo, true);
             }
         }
 
@@ -64,7 +85,20 @@ namespace Reversi.Players.Display
         {
             foreach (var selectPlayerInfo in selectPlayerInfos)
             {
-                selectPlayerInfo.playerObject.SetActive(false);
+                ChangeDisplayPlayer(selectPlayerInfo, false);
+            }
+        }
+
+        /// <summary>
+        /// プレイヤーの表示を切り替える
+        /// </summary>
+        /// <param name="playerInfo"></param>
+        /// <param name="isDisplay"></param>
+        private void ChangeDisplayPlayer(SelectPlayerInfo playerInfo, bool isDisplay)
+        {
+            if (playerInfo.playerObject.activeSelf != isDisplay)
+            {
+                playerInfo.playerObject.SetActive(isDisplay);
             }
         }
     }

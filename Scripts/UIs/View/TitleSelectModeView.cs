@@ -29,5 +29,9 @@ namespace Reversi.UIs.View
             watchPlayButton.onClick.RemoveAllListeners();
             watchPlayButton.onClick.AddListener(action);
         }
+        public void SetIsInteractableWatchPlayerButton(bool isInteractable)
+        {
+            watchPlayButton.interactable = isInteractable;
+        }
     }
 }

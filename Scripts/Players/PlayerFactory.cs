@@ -38,6 +38,7 @@ namespace Reversi.Players
                     player = new InputPlayer(stoneState, putStoneAction, _inputEventProvider);
                     player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/Human"), createParent);
                     break;
+                // ----- 本番で使用しないAI -----
                 case PlayerType.RandomAIPlayer:
                     player = new RandomAIPlayer(stoneState, putStoneAction);
                     break;
@@ -66,7 +67,21 @@ namespace Reversi.Players
                     player = new MlAgentsAIPlayer(stoneState, putStoneAction);
                     player.OnInstantiateAgent(_assetsService.LoadAssets("Player/MLAgentAIPlayerLearn2"));
                     break;
-                // ----- 以下が本番で対戦できるAI -----
+                // ----- 本番用、進捗に影響しないAI -----
+                case PlayerType.MiniMaxAIRobotPlayer:
+                    player = new MiniMaxAIPlayer(stoneState, putStoneAction);
+                    player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/AIRobot"), createParent);
+                    break;
+                case PlayerType.MonteCarloAIRobotPlayer:
+                    player = new MonteCarloAIPlayer(stoneState, putStoneAction);
+                    player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/AIRobot"), createParent);
+                    break;
+                case PlayerType.MlAgentAIRobotPlayer:
+                    player = new MlAgentsAIPlayer(stoneState, putStoneAction);
+                    player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/AIRobot"), createParent);
+                    player.OnInstantiateAgent(_assetsService.LoadAssets("Player/MLAgentAIPlayer")); // 強化学習（強）
+                    break;
+                // ----- 本番用、進捗に影響するAI -----
                 case PlayerType.PikaruPlayer:
                     player = new PikaruPlayer(stoneState, putStoneAction);
                     player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/Pikaru"), createParent);
@@ -89,19 +104,6 @@ namespace Reversi.Players
                 case PlayerType.ZeroPlayer:
                     player = new ZeroPlayer(stoneState, putStoneAction);
                     player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/Zero"), createParent);
-                    break;
-                case PlayerType.MiniMaxAIRobotPlayer:
-                    player = new MiniMaxAIPlayer(stoneState, putStoneAction);
-                    player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/AIRobot"), createParent);
-                    break;
-                case PlayerType.MonteCarloAIRobotPlayer:
-                    player = new MonteCarloAIPlayer(stoneState, putStoneAction);
-                    player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/AIRobot"), createParent);
-                    break;
-                case PlayerType.MlAgentAIRobotPlayer:
-                    player = new MlAgentsAIPlayer(stoneState, putStoneAction);
-                    player.OnInstantiate(_assetsService.LoadAssets("FbxVariant/AIRobot"), createParent);
-                    player.OnInstantiateAgent(_assetsService.LoadAssets("Player/MLAgentAIPlayer")); // 強化学習（強）
                     break;
             }
             return player;

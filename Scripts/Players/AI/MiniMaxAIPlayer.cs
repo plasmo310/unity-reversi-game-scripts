@@ -1,5 +1,5 @@
 using System;
-using Cysharp.Threading.Tasks;
+using System.Threading;
 using Reversi.Stones.Stone;
 
 namespace Reversi.Players.AI
@@ -13,30 +13,19 @@ namespace Reversi.Players.AI
 
         protected override void StartThink()
         {
-            StartThinkAsync();
+            StartThinkAsync(CancellationTokenSource.Token);
         }
 
         /// <summary>
         /// 選択するストーンを考える
         /// </summary>
-        private async void StartThinkAsync()
+        private async void StartThinkAsync(CancellationToken token)
         {
             // 考える時間
-            await WaitSelectTime(200);
+            await WaitSelectTime(200, token);
 
             // ストーンを探索
-            SelectStoneIndex = await SearchStoneTask();
-        }
-
-        /// <summary>
-        /// ストーン探索処理
-        /// </summary>
-        private async UniTask<StoneIndex> SearchStoneTask()
-        {
-            await UniTask.SwitchToThreadPool(); // 時間がかかるため別スレッドで実行
-            var result = AIAlgorithm.SearchNegaAlphaStone(StoneStates, MyStoneState, 3, true);
-            await UniTask.SwitchToMainThread();
-            return result;
+            SelectStoneIndex = await AIAlgorithm.SearchMultiThreadNegaAlphaStoneAsync(StoneStates, MyStoneState, 3, true, token);
         }
     }
 }

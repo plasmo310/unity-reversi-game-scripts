@@ -1,7 +1,9 @@
 using System.Collections.Generic;
+using Reversi.Audio;
 using Reversi.Common;
-using Reversi.Managers;
+using Reversi.DB;
 using UnityEngine;
+using AudioInfo = Reversi.Services.IAudioService.AudioInfo;
 
 namespace Reversi.Services.Impl
 {
@@ -30,19 +32,36 @@ namespace Reversi.Services.Impl
         private readonly AudioSource _bgmAudioSource; // BGM再生用
 
         /// <summary>
+        /// OnOffフラグ
+        /// </summary>
+        private bool _isSeOff = false;
+        private bool _isBgmOff = false;
+
+        /// <summary>
         /// Audio情報
         /// </summary>
         private readonly Dictionary<ReversiAudioType, AudioInfo> _audioInfos;
-        private class AudioInfo
+
+        public AudioService(PlayerPrefsRepository playerPrefsRepository)
         {
-            public readonly string Name;
-            public readonly float Volume;
-            public AudioInfo(string name, float volume)
+            // オーディオ情報を登録
+            _audioInfos = ReversiAudioUtil.GetAudioInfos();
+
+            // AudioManagerオブジェクトを作成
+            var audioManager = GameObject.Find(AudioManagerObjectName);
+            if (audioManager == null)
             {
-                Name = name;
-                Volume = volume;
+                audioManager = new GameObject(AudioManagerObjectName);
+                audioManager.AddComponent<DontDestroyBehaviour>();
+                _seAudioSource = audioManager.AddComponent<AudioSource>();
+                _bgmAudioSource = audioManager.AddComponent<AudioSource>();
             }
+
+            // PlayerPrefsからオーディオ情報を設定
+            _isSeOff = playerPrefsRepository.GetIsSeVolumeOff();
+            _isBgmOff = playerPrefsRepository.GetIsBgmVolumeOff();
         }
+
         private ReversiAudioType GetReversiAudioType(string name)
         {
             foreach (var audioInfoKeyValue in _audioInfos)
@@ -55,30 +74,14 @@ namespace Reversi.Services.Impl
             return ReversiAudioType.None;
         }
 
-        public AudioService()
-        {
-            // オーディオ情報を登録
-            _audioInfos = new Dictionary<ReversiAudioType, AudioInfo>();
-            _audioInfos.Add(ReversiAudioType.BgmTitleTop, new AudioInfo("ShotThunder", 1.0f)); // TODO ファイル名を変える
-            _audioInfos.Add(ReversiAudioType.SeClick, new AudioInfo("se_click", 1.0f));
-            _audioInfos.Add(ReversiAudioType.SeDecide, new AudioInfo("se_decide", 1.0f));
-
-            // AudioManagerオブジェクトを作成
-            var audioManager = GameObject.Find(AudioManagerObjectName);
-            if (audioManager == null)
-            {
-                audioManager = new GameObject(AudioManagerObjectName);
-                audioManager.AddComponent<DontDestroyBehaviour>();
-                _seAudioSource = audioManager.AddComponent<AudioSource>();
-                _bgmAudioSource = audioManager.AddComponent<AudioSource>();
-            }
-        }
-
         /// <summary>
         /// 効果音再生
         /// </summary>
         public void PlayOneShot(ReversiAudioType audioType)
         {
+            // VolumeOff指定されていれば何もしない
+            if (_isSeOff) return;
+
             var audioClip = LoadAudioClip(audioType);
             var volume = _seVolume * _audioInfos[audioType].Volume;
             _seAudioSource.PlayOneShot(audioClip, volume);
@@ -89,14 +92,6 @@ namespace Reversi.Services.Impl
         /// </summary>
         public void PlayBGM(ReversiAudioType audioType)
         {
-            var audioClip = LoadAudioClip(audioType);
-
-            // 既に同じBDMが再生中ならそのまま
-            if (_bgmAudioSource.clip == audioClip)
-            {
-                return;
-            }
-
             // 再生中なら止める
             if (_bgmAudioSource.isPlaying)
             {
@@ -107,6 +102,13 @@ namespace Reversi.Services.Impl
             _bgmAudioSource.volume = _bgmVolume * _audioInfos[audioType].Volume;
             _bgmAudioSource.loop = true;
             _bgmAudioSource.Play();
+
+            // VolumeOff指定されている場合
+            // ONにした時に再生されるよう、一時停止にしておく
+            if (_isBgmOff)
+            {
+                _bgmAudioSource.Pause();
+            }
         }
 
         /// <summary>
@@ -175,6 +177,44 @@ namespace Reversi.Services.Impl
                 _cachedAudioDictionary.Add(fileName, audioClip);
             }
             return _cachedAudioDictionary[fileName];
+        }
+
+        /// <summary>
+        /// BGMのOffフラグを設定
+        /// </summary>
+        public bool ChangeBgmVolumeOnOff()
+        {
+            _isBgmOff = !_isBgmOff;
+
+            // 再生中のBGMを一旦停止する
+            if (_isBgmOff)
+            {
+                _bgmAudioSource.Pause();
+            }
+            else
+            {
+                _bgmAudioSource.UnPause();
+            }
+            return _isBgmOff;
+        }
+
+        public bool GetIsBgmVolumeOff()
+        {
+            return _isBgmOff;
+        }
+
+        /// <summary>
+        /// SEのOnOffフラグを設定
+        /// </summary>
+        public bool ChangeSeVolumeOnOff()
+        {
+            _isSeOff = !_isSeOff;
+            return _isSeOff;
+        }
+
+        public bool GetIsSeVolumeOff()
+        {
+            return _isSeOff;
         }
     }
 }

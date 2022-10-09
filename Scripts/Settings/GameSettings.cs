@@ -15,6 +15,11 @@ namespace Reversi.Settings
         public GameDebugOption DebugOption => debugOption;
 
         /// <summary>
+        /// モバイルプラットフォームか？
+        /// </summary>
+        [NonSerialized] public bool IsMobilePlatform;
+
+        /// <summary>
         /// 選択したゲームモード
         /// </summary>
         [SerializeField] private GameModeType initSelectGameMode;

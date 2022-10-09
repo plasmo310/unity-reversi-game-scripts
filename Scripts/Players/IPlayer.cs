@@ -11,6 +11,11 @@ namespace Reversi.Players
         /// </summary>
         public StoneState MyStoneState { get; }
 
+        /// <summary>
+        /// プレイヤー種類
+        /// </summary>
+        public PlayerType MyPlayerType { get; }
+
         public bool IsWaitSelect { set; get; }
 
         public void OnInitialize(PlayerType playerType, bool isDisplayAnimation);

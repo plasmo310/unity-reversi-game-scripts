@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using Cysharp.Threading.Tasks;
 using Reversi.Stones;
 using Reversi.Stones.Stone;
@@ -10,26 +11,25 @@ namespace Reversi.Players.AI
     /// </summary>
     public class GoloyanPlayer : Player
     {
-        // Start is called before the first frame update
         public GoloyanPlayer(StoneState myStoneState, Action<StoneState, int, int> putStoneAction) : base(myStoneState, putStoneAction)
         {
         }
 
         protected override void StartThink()
         {
-            StartThinkAsync();
+            StartThinkAsync(CancellationTokenSource.Token);
         }
 
         /// <summary>
         /// 選択するストーンを考える
         /// </summary>
-        private async void StartThinkAsync()
+        private async void StartThinkAsync(CancellationToken token)
         {
             // 考える時間
-            await WaitSelectTime(200);
+            await WaitSelectTime(200, token);
 
             // 早すぎると上手くいかないので1フレームは待つ
-            await UniTask.DelayFrame(1);
+            await UniTask.DelayFrame(1, cancellationToken: token);
 
             // 奇抜さを出すため、1/5の確率でランダムに打つ
             var isRandom = UnityEngine.Random.Range(0, 5) == 0;
@@ -40,14 +40,14 @@ namespace Reversi.Players.AI
             }
 
             // 感情によって選択手法を変える
+            var gameRate = StoneCalculator.GetGameRate(StoneStates);
             switch (Emotion)
             {
                 // 通常：MiniMax -> モンテカルロ （稀にランダム）
                 case PlayerEmotion.Normal:
-                    var gameRate = StoneCalculator.GetGameRate(StoneStates);
                     SelectStoneIndex = gameRate < 0.5f
-                            ? await SearchMiniMaxStoneTask()
-                            : await SearchMonteCarloStoneTask();
+                        ? await AIAlgorithm.SearchMultiThreadNegaAlphaStoneAsync(StoneStates, MyStoneState, 3, true, token)
+                        : await AIAlgorithm.SearchMultiThreadMonteCarloStoneAsync(StoneStates, MyStoneState, (int)　(80 * gameRate), token);
                     break;
                 // 焦り：強化学習（MiniMonteキラー）
                 case PlayerEmotion.Heat:
@@ -56,32 +56,9 @@ namespace Reversi.Players.AI
                     break;
                 // 悲しい：モンテカルロ
                 case PlayerEmotion.Sad:
-                    SelectStoneIndex = await SearchMonteCarloStoneTask();
+                    SelectStoneIndex = await AIAlgorithm.SearchMultiThreadMonteCarloStoneAsync(StoneStates, MyStoneState, (int)　(80 * gameRate), token);
                     break;
             }
-        }
-
-        /// <summary>
-        /// MiniMax法でのストーン探索処理
-        /// </summary>
-        private async UniTask<StoneIndex> SearchMiniMaxStoneTask()
-        {
-            await UniTask.SwitchToThreadPool(); // 時間がかかるため別スレッドで実行
-            var result = AIAlgorithm.SearchNegaAlphaStone(StoneStates, MyStoneState, 3, true);
-            await UniTask.SwitchToMainThread();
-            return result;
-        }
-
-        /// <summary>
-        /// モンテカルロ探索処理
-        /// </summary>
-        private async UniTask<StoneIndex> SearchMonteCarloStoneTask()
-        {
-            await UniTask.SwitchToThreadPool(); // 時間がかかるため別スレッドで実行
-            var gameRate = StoneCalculator.GetGameRate(StoneStates);
-            var result = AIAlgorithm.SearchMonteCarloStone(StoneStates, MyStoneState, (int)　(100 * gameRate));
-            await UniTask.SwitchToMainThread();
-            return result;
         }
     }
 }

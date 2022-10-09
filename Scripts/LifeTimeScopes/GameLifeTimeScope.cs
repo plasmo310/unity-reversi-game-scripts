@@ -25,6 +25,10 @@ namespace Reversi.LifeTimeScopes
         [SerializeField] private GameObject player1;
         [SerializeField] private GameObject player2;
 
+        // チートメニューを表示する場合には、ここにアタッチする
+        // デバッグ用のチートPresenter
+        [SerializeField] private DebugGamePresenter debugGamePresenter;
+
         protected override void Configure(IContainerBuilder builder)
         {
             // プレイヤー位置を設定
@@ -52,6 +56,12 @@ namespace Reversi.LifeTimeScopes
             if (gameSettings.DebugOption.isWriteDebugLog)
             {
                 builder.Register<ILogService, LogWriterService>(Lifetime.Singleton);
+            }
+
+            // デバッグ用のチートPresenter
+            if (debugGamePresenter != null)
+            {
+                builder.RegisterComponent(debugGamePresenter);
             }
         }
     }

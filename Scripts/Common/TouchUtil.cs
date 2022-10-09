@@ -18,8 +18,8 @@ namespace Reversi.Common
         /// </summary>
         public static Touch GetBeganTouch()
         {
-            // *** Unityエディター ***
-            if (Application.isEditor)
+            // *** Unityエディター or WebGL ***
+            if (Application.isEditor || Application.platform == RuntimePlatform.WebGLPlayer)
             {
                 // クリックされた場合(ID:0固定)
                 if (Input.GetButtonDown(MouseLeftClick))
@@ -52,8 +52,8 @@ namespace Reversi.Common
         /// </summary>
         public static bool IsPointerOver(Touch touch)
         {
-            // *** Unityエディター ***
-            if (Application.isEditor)
+            // *** Unityエディター or WebGL ***
+            if (Application.isEditor || Application.platform == RuntimePlatform.WebGLPlayer)
             {
                 return EventSystem.current &&
                        EventSystem.current.IsPointerOverGameObject();
@@ -80,8 +80,8 @@ namespace Reversi.Common
         /// </summary>
         public static Vector3 GetCurrentTouchPosition(Touch touch)
         {
-            // *** Unityエディター ***
-            if (Application.isEditor)
+            // *** Unityエディター or WebGL ***
+            if (Application.isEditor || Application.platform == RuntimePlatform.WebGLPlayer)
             {
                 // マウスの位置を返却
                 return Input.mousePosition;

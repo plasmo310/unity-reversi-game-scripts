@@ -1,8 +1,10 @@
 using System;
 using System.Threading;
 using Cysharp.Threading.Tasks;
+using Reversi.Audio;
 using Reversi.Common;
 using Reversi.Players;
+using Reversi.Services;
 using Reversi.Settings;
 using UniRx;
 
@@ -15,6 +17,8 @@ namespace Reversi.Managers
     {
         private readonly GameSettings _gameSettings;
         private readonly TitleCameraManager _titleCameraManager;
+        private readonly IAdmobService _admobService;
+        private readonly ITransitionService _transitionService;
 
         /// <summary>
         /// 状態
@@ -23,16 +27,22 @@ namespace Reversi.Managers
         public IReadOnlyReactiveProperty<TitleState> State => _state;
         private readonly StateMachine<TitleManager> _stateMachine;
 
-        public TitleManager(GameSettings gameSettings, TitleCameraManager titleCameraManager)
+        public TitleManager(GameSettings gameSettings, TitleCameraManager titleCameraManager,
+            IAudioService audioService, IAdmobService admobService, ITransitionService transitionService)
         {
             _gameSettings = gameSettings;
             _titleCameraManager = titleCameraManager;
+            _admobService = admobService;
+            _transitionService = transitionService;
 
             // ステートマシン設定
             _stateMachine = new StateMachine<TitleManager>(this);
             _stateMachine.SetChangeStateEvent(ChangeStateEvent);
             _stateMachine.Add<StateSelectMode>((int) TitleState.SelectMode);
             _stateMachine.Add<StateSelectPlayer>((int) TitleState.SelectPlayer);
+
+            // BGM開始
+            audioService.PlayBGM(ReversiAudioType.BgmTitleTop);
         }
 
         public void OnStart()
@@ -104,6 +114,9 @@ namespace Reversi.Managers
             private CancellationTokenSource _cancellationTokenSource;
             public override void OnStart()
             {
+                // バナー表示
+                Owner._admobService.ShowBanner();
+
                 // モード選択開始
                 _cancellationTokenSource = new CancellationTokenSource();
                 StartSelectModeAsync(_cancellationTokenSource.Token);
@@ -143,6 +156,9 @@ namespace Reversi.Managers
             private CancellationTokenSource _cancellationTokenSource;
             public override void OnStart()
             {
+                // バナー非表示
+                Owner._admobService.HideBanner();
+
                 // プレイヤー選択開始
                 _cancellationTokenSource = new CancellationTokenSource();
                 StartSelectPlayersAsync(_cancellationTokenSource.Token);
@@ -176,7 +192,7 @@ namespace Reversi.Managers
                     cancellationToken: token);
 
                 // 選択されたらゲーム開始
-                SceneLoader.LoadScene("GameScene");
+                Owner._transitionService.LoadScene("GameScene");
             }
         }
     }

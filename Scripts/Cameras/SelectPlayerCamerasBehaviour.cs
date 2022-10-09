@@ -47,5 +47,18 @@ namespace Reversi.Cameras
         {
             cameraInfos.ForEach(info => info.virtualCamera.Priority = priority);
         }
+
+        /// <summary>
+        /// 全体を映すカメラ
+        /// </summary>
+        [SerializeField] private AllPlayerCameraBehaviour allPlayerCameraBehaviour;
+
+        /// <summary>
+        /// 全体カメラのパンアニメーションを有効にする
+        /// </summary>
+        public void SetIsEnableAllPlayerCameraPanAnimation(bool isEnable)
+        {
+            allPlayerCameraBehaviour.SetIsEnablePanAnimation(isEnable);
+        }
     }
 }

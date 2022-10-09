@@ -1,9 +1,23 @@
-using Reversi.Managers;
+using Reversi.Audio;
 
 namespace Reversi.Services
 {
     public interface IAudioService
     {
+        /// <summary>
+        /// オーディオ情報
+        /// </summary>
+        public class AudioInfo
+        {
+            public readonly string Name;
+            public readonly float Volume;
+            public AudioInfo(string name, float volume)
+            {
+                Name = name;
+                Volume = volume;
+            }
+        }
+
         /// <summary>
         /// 効果音再生
         /// </summary>
@@ -36,5 +50,13 @@ namespace Reversi.Services
         /// </summary>
         /// <param name="volume"></param>
         public void ChangeSeVolume(float volume);
+
+        /// <summary>
+        /// ボリュームOnOffフラグ設定
+        /// </summary>
+        public bool ChangeBgmVolumeOnOff();
+        public bool GetIsBgmVolumeOff();
+        public bool ChangeSeVolumeOnOff();
+        public bool GetIsSeVolumeOff();
     }
 }

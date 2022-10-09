@@ -26,6 +26,8 @@ namespace Reversi.Players.Agents
         /// </summary>
         public override void CollectObservations(VectorSensor sensor)
         {
+            if (_stoneStates == null) return;
+
             var learnStoneStates = ConvertLearnStoneStates(_stoneStates, _myStoneState);
             sensor.AddObservation(learnStoneStates);
         }
@@ -35,6 +37,8 @@ namespace Reversi.Players.Agents
         /// </summary>
         private float[] ConvertLearnStoneStates(StoneState[,] stoneStates, StoneState myStoneState)
         {
+            if (stoneStates == null) return null;
+
             var convStoneStates = new float[stoneStates.Length];
             for (var i = 0; i < stoneStates.Length; i++)
             {

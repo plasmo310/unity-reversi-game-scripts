@@ -61,5 +61,13 @@ namespace Reversi.Managers
             _selectPlayerCamerasBehaviour.SetAllPriority(HideCameraPriority);
             _selectPlayerCamerasBehaviour.ShowCamera(playerType);
         }
+
+        /// <summary>
+        /// 全体カメラのパンアニメーションを有効にする
+        /// </summary>
+        public void SetIsEnableAllPlayerCameraPanAnimation(bool isEnable)
+        {
+            _selectPlayerCamerasBehaviour.SetIsEnableAllPlayerCameraPanAnimation(isEnable);
+        }
     }
 }

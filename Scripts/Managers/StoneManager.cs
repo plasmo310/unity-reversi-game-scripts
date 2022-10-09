@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using Reversi.Audio;
 using Reversi.Board;
 using Reversi.Services;
 using Reversi.Settings;
@@ -18,6 +18,7 @@ namespace Reversi.Managers
     {
         private readonly GameSettings _gameSettings;
         private readonly BoardBehaviour _boardBehaviour;
+        private readonly IAudioService _audioService;
 
         /// <summary>
         /// 各色ごとのストーンの数
@@ -49,8 +50,9 @@ namespace Reversi.Managers
         private static readonly float StoneOffsetY = 0.1f;
 
         [Inject]
-        public StoneManager(IAssetsService assetsService, GameSettings gameSettings, BoardBehaviour boardBehaviour)
+        public StoneManager(IAssetsService assetsService, IAudioService audioService, GameSettings gameSettings, BoardBehaviour boardBehaviour)
         {
+            _audioService = audioService;
             _gameSettings = gameSettings;
             _boardBehaviour = boardBehaviour;
 
@@ -74,7 +76,7 @@ namespace Reversi.Managers
 
             // 作成済のストーンを削除
             foreach(Transform child in _stonesBase.transform){
-                UnityEngine.Object.Destroy(child.gameObject);
+                Object.Destroy(child.gameObject);
             }
 
             // ストーンをEmptyで初期化して設定
@@ -138,6 +140,9 @@ namespace Reversi.Managers
             var turnStonesIndex = StoneCalculator.GetTurnStonesIndex(_stoneStates, putState, putX, putZ);
             if (turnStonesIndex == null || turnStonesIndex.Count == 0) return false;
 
+            // SE再生
+            _audioService.PlayOneShot(ReversiAudioType.SePut1);
+
             // ストーンを置いて状態を更新する
             _stoneStates = StoneCalculator.GetPutStoneState(_stoneStates, putState, putX, putZ, turnStonesIndex);
 
@@ -150,7 +155,7 @@ namespace Reversi.Managers
         /// <summary>
         /// 全てのストーンの表示を更新する
         /// </summary>
-        private void UpdateAllViewStones(StoneState[,] stoneStates, StoneIndex putStoneIndex = null)
+        public void UpdateAllViewStones(StoneState[,] stoneStates, StoneIndex putStoneIndex = null)
         {
             // ストーンオブジェクトの表示を更新
             for (var x = 0; x < _viewStoneBehaviours.GetLength(0); x++)
@@ -259,10 +264,18 @@ namespace Reversi.Managers
         /// <summary>
         /// ストーン配列のクローンを返却する
         /// </summary>
-        /// <returns></returns>
         public StoneState[,] GetStoneStatesClone()
         {
             return _stoneStates.Clone() as StoneState[,];
+        }
+
+        /// <summary>
+        /// StoneStatesの強制上書き（デバッグ用）
+        /// </summary>
+        /// <param name="stoneStates"></param>
+        public void SetForceStoneStatesDebug(StoneState[,] stoneStates)
+        {
+            _stoneStates = stoneStates;
         }
     }
 }

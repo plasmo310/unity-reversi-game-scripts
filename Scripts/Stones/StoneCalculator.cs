@@ -11,6 +11,14 @@ namespace Reversi.Stones
     public static class StoneCalculator
     {
         /// <summary>
+        /// ストーン状態を黒←→白で切り替えて返却
+        /// </summary>
+        public static StoneState GetReverseStoneState(StoneState stoneState)
+        {
+            return stoneState == StoneState.Black ? StoneState.White : StoneState.Black;
+        }
+
+        /// <summary>
         /// 各色のストーンの数を調べる
         /// </summary>
         /// <param name="checkStoneStates"></param>
